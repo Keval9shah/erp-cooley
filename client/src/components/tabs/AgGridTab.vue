@@ -1,11 +1,12 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { ref } from 'vue'
 import { AgGridVue } from 'ag-grid-vue3'
 import { useCsvParser } from '../../composables/useCSVParser'
 import 'ag-grid-community/styles/ag-grid.css'
 import 'ag-grid-community/styles/ag-theme-alpine.css'
 
-import { ModuleRegistry, AllCommunityModule, GridApi, SizeColumnsToContentStrategy, SizeColumnsToFitGridStrategy, SizeColumnsToFitProvidedWidthStrategy, GridOptions, ColDef } from 'ag-grid-community'
+import { ModuleRegistry, AllCommunityModule } from 'ag-grid-community'
+import type { GridApi, GridOptions, ColDef} from 'ag-grid-community'
 ModuleRegistry.registerModules([AllCommunityModule])
 
 const { rowData, parseCsv } = useCsvParser()
@@ -86,15 +87,6 @@ const gridOptions: GridOptions = {
 function onGridReady(params: any) {
   gridApi.value = params.api
 }
-
-const autoSizeStrategy = ref<
-      | SizeColumnsToFitGridStrategy
-      | SizeColumnsToFitProvidedWidthStrategy
-      | SizeColumnsToContentStrategy
-    >({
-      type: "fitGridWidth",
-      defaultMinWidth: 100,
-    });
 </script>
 
 <template>
