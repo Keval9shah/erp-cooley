@@ -1,29 +1,30 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
 import { AgGridVue } from 'ag-grid-vue3'
-import { useCsvParser } from '../../composables/useCsvParser'
+import { useCsvParser } from '../../composables/useCSVParser'
 import 'ag-grid-community/styles/ag-grid.css'
 import 'ag-grid-community/styles/ag-theme-alpine.css'
 
-import { ModuleRegistry, AllCommunityModule } from 'ag-grid-community'
+import { ModuleRegistry, AllCommunityModule, GridApi, SizeColumnsToContentStrategy, SizeColumnsToFitGridStrategy, SizeColumnsToFitProvidedWidthStrategy, GridOptions, ColDef } from 'ag-grid-community'
 ModuleRegistry.registerModules([AllCommunityModule])
 
 const { rowData, parseCsv } = useCsvParser()
 const rawCsv = ref('')
+const gridApi = ref<GridApi | null>(null)
 
-const columnDefs = [
-  { headerName: 'Quality Status', field: 'qualityStatus' },
-  { headerName: 'Status', field: 'status' },
-  { headerName: 'MO Status', field: 'moStatus' },
-  { headerName: 'Rolls to Pack', field: 'rollsToPack' },
-  { headerName: 'Rolls To Transfer', field: 'rollsToTransfer' },
-  { headerName: 'Skids Left to Transfer', field: 'skidsLeftToTransfer' },
+const columnDefs: ColDef[] = [
+  { headerName: 'MO Status', field: 'moStatus', filter: 'agTextColumnFilter' },
+  { headerName: 'Rolls to Pack', field: 'rollsToPack', filter: 'agNumberColumnFilter' },
+  { headerName: 'Rolls To Transfer', field: 'rollsToTransfer', filter: 'agNumberColumnFilter' },
+  { headerName: 'Skids Left to Transfer', field: 'skidsLeftToTransfer', filter: 'agNumberColumnFilter' },
   { headerName: 'Fab to Inspect/Unassign', field: 'fabToInspectUnassign' },
-  { headerName: 'MO Promise Date', field: 'moPromiseDate' },
-  { headerName: 'SO Promise Date', field: 'soPromiseDate' },
-  { headerName: 'FG Panel Items', field: 'fgPanelItems' },
-  { headerName: 'FG MO', field: 'fgMo' },
+  { headerName: 'MO Promise Date', field: 'moPromiseDate', filter: 'agDateColumnFilter' },
+  { headerName: 'SO Promise Date', field: 'soPromiseDate', filter: 'agDateColumnFilter' },
+  { headerName: 'FG Panel Items', field: 'fgPanelItems', filter: 'agTextColumnFilter' },
+  { headerName: 'FG Item ID', field: 'fgItemID', filter: 'agTextColumnFilter' },
+  { headerName: 'FG MO', field: 'fgMo', filter: 'agNumberColumnFilter' },
   { headerName: 'Ship To Customer', field: 'shipToCustomer' },
+  { headerName: 'Ship To Customer', field: 'shipToCustomerName' },
   { headerName: 'Core Size', field: 'coreSize' },
   { headerName: 'A Grade Completed', field: 'aGradeCompleted' },
   { headerName: 'FG Req Qty', field: 'fgReqQty' },
@@ -37,9 +38,7 @@ const columnDefs = [
   { headerName: 'Fab Description', field: 'fabDescription' },
   { headerName: 'Sold To', field: 'soldTo' },
   { headerName: 'Prod Structure', field: 'prodStructure' },
-  { headerName: 'Pri', field: 'pri' },
-  { headerName: 'Type', field: 'type' },
-  { headerName: 'Dest', field: 'dest' },
+  { headerName: 'Destination', field: 'dest' },
   { headerName: 'Target Roll Len', field: 'targetRollLen' },
   { headerName: 'Bags Required', field: 'bagsRequired' },
   { headerName: 'Assigned Machine', field: 'assignedMachine' },
@@ -48,32 +47,77 @@ const columnDefs = [
   { headerName: 'Hrs', field: 'hrs' },
   { headerName: 'Days', field: 'days' },
   { headerName: 'Schedule Complete Date', field: 'scheduleCompleteDate' },
-];
+]
+
+const columnDefsWithTooltips = columnDefs.map(col => ({
+  ...col,
+  headerTooltip: col.headerName
+}))
 
 function handlePaste(event: ClipboardEvent) {
   const pastedText = event.clipboardData?.getData('text') || ''
   rawCsv.value = pastedText
   parseCsv(pastedText)
+  setTimeout(() => {
+    gridApi.value?.autoSizeAllColumns(true)
+  }, 100)
 }
+
+const gridOptions: GridOptions = {
+  columnDefs: columnDefsWithTooltips,
+  defaultColDef: {
+    floatingFilter: true,
+    sortable: true,
+    resizable: true,
+    minWidth: 80,
+    maxWidth: 220,
+  },
+  tooltipShowDelay: 0,
+  autoSizeStrategy: {
+        type: 'fitGridWidth',
+        defaultMinWidth: 100,
+    },
+  rowSelection: 'multiple',
+  onGridReady: (params: any) => {
+    gridApi.value = params.api
+  },
+}
+
+function onGridReady(params: any) {
+  gridApi.value = params.api
+}
+
+const autoSizeStrategy = ref<
+      | SizeColumnsToFitGridStrategy
+      | SizeColumnsToFitProvidedWidthStrategy
+      | SizeColumnsToContentStrategy
+    >({
+      type: "fitGridWidth",
+      defaultMinWidth: 100,
+    });
 </script>
 
 <template>
-  <div>
-    <p><strong>Paste CSV (4 fields: task, assignee, status, due date):</strong></p>
+  <div class="ag-grid-tab">
     <textarea
       @paste="handlePaste"
       placeholder="Paste CSV or Excel rows here"
       rows="4"
-      style="width: 100%; margin-bottom: 1rem"
+      style="width: 100%; margin: 1rem 0"
     ></textarea>
 
-    <div class="ag-theme-alpine" style="height: 650px; width: 100%">
+    <button>Add/Update Data</button>
+
+    <div class="ag-theme-alpine">
       <AgGridVue
         class="ag-grid"
         :theme="'legacy'"
-        :columnDefs="columnDefs"
         :rowData="rowData"
-        :defaultColDef="{ sortable: true, filter: true, resizable: true }"
+        @grid-ready="onGridReady"
+        :grid-options="gridOptions"
+        :selectionOptions="{
+          isRowSelectable: true
+        }"
       />
     </div>
   </div>
