@@ -78,7 +78,6 @@ const gridOptions: GridOptions = {
     sortable: true,
     resizable: true,
     minWidth: 80,
-    maxWidth: 220,
   },
   tooltipShowDelay: 0,
   rowSelection: 'multiple',
