@@ -2,11 +2,15 @@
 import { ref } from 'vue'
 import { AgGridVue } from 'ag-grid-vue3'
 import { useCsvParser } from '../../composables/useCSVParser'
+// @ts-ignore
+import dummyText from "../../assets/dummy.txt?raw"
+
 import 'ag-grid-community/styles/ag-grid.css'
 import 'ag-grid-community/styles/ag-theme-alpine.css'
 
 import { ModuleRegistry, AllCommunityModule } from 'ag-grid-community'
-import type { GridApi, GridOptions, ColDef} from 'ag-grid-community'
+import type { GridApi, GridOptions, ColDef, FirstDataRenderedEvent } from 'ag-grid-community'
+
 ModuleRegistry.registerModules([AllCommunityModule])
 
 const { rowData, parseCsv } = useCsvParser()
@@ -52,8 +56,11 @@ const columnDefs: ColDef[] = [
 
 const columnDefsWithTooltips = columnDefs.map(col => ({
   ...col,
-  headerTooltip: col.headerName
+  headerTooltip: col.headerName,
 }))
+
+parseCsv(dummyText)
+rawCsv.value = dummyText
 
 function handlePaste(event: ClipboardEvent) {
   const pastedText = event.clipboardData?.getData('text') || ''
@@ -74,24 +81,21 @@ const gridOptions: GridOptions = {
     maxWidth: 220,
   },
   tooltipShowDelay: 0,
-  autoSizeStrategy: {
-        type: 'fitGridWidth',
-        defaultMinWidth: 100,
-    },
   rowSelection: 'multiple',
+  suppressColumnVirtualisation: true,
   onGridReady: (params: any) => {
     gridApi.value = params.api
   },
-}
-
-function onGridReady(params: any) {
-  gridApi.value = params.api
+  onFirstDataRendered: (params: FirstDataRenderedEvent) => {
+    params.api.autoSizeAllColumns(true)
+  },
 }
 </script>
 
 <template>
   <div class="ag-grid-tab">
     <textarea
+      v-model="rawCsv"
       @paste="handlePaste"
       placeholder="Paste CSV or Excel rows here"
       rows="4"
@@ -105,11 +109,7 @@ function onGridReady(params: any) {
         class="ag-grid"
         :theme="'legacy'"
         :rowData="rowData"
-        @grid-ready="onGridReady"
         :grid-options="gridOptions"
-        :selectionOptions="{
-          isRowSelectable: true
-        }"
       />
     </div>
   </div>
