@@ -15,8 +15,7 @@
 
 .ag-theme-alpine {
   text-align: left;
-  height: 650px;
-  width: 100%;
+  height: calc( 100vh - 5rem - 42px );
   margin-top: 1rem;
 }
 
@@ -41,9 +40,7 @@ a:hover {
 body {
   margin: 0;
   display: flex;
-  place-items: center;
   min-width: 320px;
-  min-height: 100vh;
 }
 
 h1 {
@@ -72,8 +69,13 @@ button:focus-visible {
 
 .ag-popup 
 {
+  margin: 0px !important;
   height: 0 !important;
-  min-height: 0 !important;
+  min-height:  0 !important;
+}
+
+.ag-dnd-ghost {
+    margin-top: 160px !important;
 }
 
 .card {
