@@ -31,7 +31,7 @@ const columnDefs: ColDef[] = [
   { headerName: 'SO Promise Date', field: 'soPromiseDate', filter: 'agDateColumnFilter', enableRowGroup: true },
   { headerName: 'FG Panel Items', field: 'fgPanelItems', filter: 'agTextColumnFilter' },
   { headerName: 'FG Item ID', field: 'fgItemID', filter: 'agTextColumnFilter' },
-  { headerName: 'FG MO', field: 'fgMo', filter: 'agNumberColumnFilter' },
+  { headerName: 'FG MO', field: 'fgMo', filter: 'agTextColumnFilter' },
   { headerName: 'Ship To Customer', field: 'shipToCustomer' },
   { headerName: 'Ship To Customer', field: 'shipToCustomerName', enableRowGroup: true },
   { headerName: 'Core Size', field: 'coreSize' },
