@@ -3,15 +3,15 @@ import { ref } from "vue";
 export function useCsvParser() {
   const rowData = ref<any[]>([]);
 
-  // function convertNumericFields(data: any[]) {
-  //   return data.map((row) => ({
-  //     ...row,
-  //     rollsToPack: Number(row.rollsToPack),
-  //     rollsToTransfer: Number(row.rollsToTransfer),
-  //     skidsLeftToTransfer: Number(row.skidsLeftToTransfer),
-  //     fgMo: Number(row.fgMo),
-  //   }));
-  // }
+  function convertFields(data: any[]) {
+    return data.map((row) => ({
+      ...row,
+      rollsToPack: Number(row.rollsToPack),
+      rollsToTransfer: Number(row.rollsToTransfer),
+      skidsLeftToTransfer: Number(row.skidsLeftToTransfer),
+      fgMo: Number(row.fgMo),
+    }));
+  }
 
   // prettier-ignore
   const fields = [
@@ -61,14 +61,14 @@ export function useCsvParser() {
     if (lines.length > 0 && lines[0].startsWith("*") && lines[0].includes("Available Master Qty")) {
       lines.shift();
     }
-    return lines.map((line) => {
+    const parsed = lines.map((line) => {
       const cells = line.split("	").map((cell) => cell.trim());
       return fields.reduce((acc, key, index) => {
         acc[key] = cells[index]?.trim() || "";
         return acc;
       }, {} as Record<string, string>);
     });
-    // rowData.value = convertNumericFields(parsed);
+    rowData.value = convertFields(parsed);
   }
 
   return {
