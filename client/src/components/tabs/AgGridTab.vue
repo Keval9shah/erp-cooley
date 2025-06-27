@@ -9,7 +9,7 @@ import 'ag-grid-community/styles/ag-grid.css'
 import 'ag-grid-community/styles/ag-theme-alpine.css'
 
 import { ModuleRegistry, AllCommunityModule } from 'ag-grid-community'
-import type { GridApi, GridOptions, ColDef, FirstDataRenderedEvent } from 'ag-grid-community'
+import type { GridApi, GridOptions, ColDef } from 'ag-grid-community'
 import { RowGroupingModule, RowGroupingPanelModule } from 'ag-grid-enterprise'
 
 // max((available master + fab meter prod)* panels, fg req) - a grade comp 
@@ -25,34 +25,34 @@ const tempCsv = ref('')
 const gridApi = ref<GridApi | null>(null)
 
 const columnDefs: ColDef[] = [
-  { headerName: 'MO Status', field: 'moStatus', filter: 'agTextColumnFilter', enableRowGroup: true },
+  { headerName: 'MO Status', field: 'moStatus', enableRowGroup: true },
+  { headerName: 'SO Promise Date', field: 'soPromiseDate', valueFormatter: formatDateCell, filter: 'agDateColumnFilter', enableRowGroup: true },
   { headerName: 'Fab to Inspect/Unassign', field: 'fabToInspectUnassign' },
-  { headerName: 'MO Promise Date', field: 'moPromiseDate', filter: 'agDateColumnFilter' },
-  { headerName: 'SO Promise Date', field: 'soPromiseDate', filter: 'agDateColumnFilter', enableRowGroup: true },
-  { headerName: 'FG Panel Items', field: 'fgPanelItems', filter: 'agTextColumnFilter' },
-  { headerName: 'FG Item ID', field: 'fgItemID', filter: 'agTextColumnFilter' },
-  { headerName: 'FG MO', field: 'fgMo', filter: 'agTextColumnFilter' },
-  { headerName: 'Ship To Customer', field: 'shipToCustomer' },
-  { headerName: 'Ship To Customer', field: 'shipToCustomerName', enableRowGroup: true },
+  { headerName: 'FG Panel Items', field: 'fgPanelItems', width: 135 },
+  { headerName: 'FG MO', field: 'fgMo' },
+  { headerName: 'Fab Item', field: 'fabItem', enableRowGroup: true },
+  { headerName: 'Ship To Customer', field: 'shipToCustomerName' , enableRowGroup: true },
   { headerName: 'Core Size', field: 'coreSize' },
   { headerName: 'A Grade Completed', field: 'aGradeCompleted' },
   { headerName: 'FG Req Qty', field: 'fgReqQty' },
-  { headerName: 'Open Qty', field: 'openQty' },
-  { headerName: 'Extrusion Completed', field: 'extrusionCompleted' },
   { headerName: 'Fab Metres Prod.', field: 'fabMetresProd' },
-  { headerName: '# Of Aframes', field: 'numOfAframes' },
-  { headerName: 'Fab MO', field: 'fabMo' },
   { headerName: 'Available Master Qty', field: 'availableMasterQty' },
-  { headerName: 'Fab Item', field: 'fabItem', enableRowGroup: true },
+  { headerName: 'Fab MO', field: 'fabMo' },
   { headerName: 'Fab Description', field: 'fabDescription' },
-  { headerName: 'Sold To', field: 'soldTo', maxWidth: 220, enableRowGroup: true },
+//   { headerName: 'Sold To', field: 'soldTo', enableRowGroup: true },
   { headerName: 'Prod Structure', field: 'prodStructure' },
-  { headerName: 'Destination', field: 'dest' },
-  { headerName: 'Target Roll Len', field: 'targetRollLen' },
   { headerName: 'Assigned Machine', field: 'assignedMachine', enableRowGroup: true },
-  { headerName: 'Scheduled Machine', field: 'scheduledMachine' },
-  { headerName: 'Activity', field: 'activity' },
+  { headerName: 'Target Roll Len', field: 'targetRollLen' },
   { headerName: 'Hrs', field: 'hrs' },
+  { headerName: '# Of Aframes', field: 'numOfAframes' },
+  { headerName: 'Extrusion Completed', field: 'extrusionCompleted' },
+  { headerName: 'Destination', field: 'dest' },
+//   { headerName: 'Scheduled Machine', field: 'scheduledMachine' },
+  { headerName: 'Activity', field: 'activity' },
+  { headerName: 'Open Qty', field: 'openQty' },
+  { headerName: 'MO Promise Date', field: 'moPromiseDate', valueFormatter: formatDateCell, filter: 'agDateColumnFilter', },
+  { headerName: 'Ship To Customer', field: 'shipToCustomer' },
+  { headerName: 'FG Item ID', field: 'fgItemID' },
 ]
 
 const columnDefsWithTooltips = columnDefs.map(col => ({
@@ -75,18 +75,55 @@ function closeModal() {
 function applyCsv() {
   rawCsv.value = tempCsv.value
   parseCsv(rawCsv.value)
-  gridApi.value?.autoSizeAllColumns(true)
+  resizeCells();
   showModal.value = false
+}
+
+function formatDateCell(params: any) {
+  const raw = params.value;
+  if (!raw) return '';
+  const date = new Date(raw);
+  if (isNaN(date.getTime())) return raw;
+
+  const day = date.getDate().toString().padStart(2, '0');
+  const month = (date.getMonth() + 1).toString().padStart(2, '0');
+  const weekday = new Intl.DateTimeFormat('en-US', { weekday: 'short' }).format(date);
+
+  return `${day}/${month} - ${weekday}`;
+}
+
+function resizeCells() {
+  gridApi.value?.autoSizeAllColumns(true)
+  gridApi.value?.applyColumnState({
+    state: [
+      {
+        colId: 'fgPanelItems',
+        width: 120,
+      },
+      {
+        colId: 'shipToCustomerName',
+        width: 240
+      }
+    ],
+    applyOrder: false,
+  })
+//   const mostColumnIds: string[] = []
+//   gridApi.value?.getAllGridColumns().forEach((col) => {
+//     if (col.getColId() !== 'fgPanelItems') {
+//       mostColumnIds.push(col.getColId())
+//     }
+//   })
+//   gridApi.value?.autoSizeColumns(mostColumnIds)
 }
 
 const gridOptions: GridOptions = {
   columnDefs: columnDefsWithTooltips,
   defaultColDef: {
+    filter: 'agTextColumnFilter',
     floatingFilter: true,
     sortable: true,
     resizable: true,
     minWidth: 80,
-    maxWidth: 320,
   },
   groupDisplayType: 'groupRows',
   tooltipShowDelay: 0,
@@ -102,10 +139,15 @@ const gridOptions: GridOptions = {
   suppressColumnVirtualisation: true,
   onGridReady: (params: any) => {
     gridApi.value = params.api
+    params.api.setFilterModel({
+    moStatus: {
+      type: 'notContains',
+      filter: 'closed',
+      filterType: 'text',
+    },
+  });
   },
-  onFirstDataRendered: (params: FirstDataRenderedEvent) => {
-    params.api.autoSizeAllColumns(true)
-  },
+  onFirstDataRendered: resizeCells,
 }
 </script>
 

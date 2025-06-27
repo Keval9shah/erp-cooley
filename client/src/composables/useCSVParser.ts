@@ -4,14 +4,27 @@ export function useCsvParser() {
   const rowData = ref<any[]>([]);
 
   function convertFields(data: any[]) {
-    return data.map((row) => ({
+  return data.map((row) => {
+    const assigned = row.assignedMachine?.trim() || '';
+    const scheduled = row.scheduledMachine?.trim() || '';
+
+    return {
       ...row,
-      rollsToPack: Number(row.rollsToPack),
-      rollsToTransfer: Number(row.rollsToTransfer),
-      skidsLeftToTransfer: Number(row.skidsLeftToTransfer),
-      fgMo: Number(row.fgMo),
-    }));
-  }
+
+      // ✅ Convert to Date objects
+      moPromiseDate: row.moPromiseDate ? new Date(row.moPromiseDate) : null,
+      soPromiseDate: row.soPromiseDate ? new Date(row.soPromiseDate) : null,
+      scheduleCompleteDate: row.scheduleCompleteDate ? new Date(row.scheduleCompleteDate) : null,
+
+      // ✅ Data Logic
+      assignedMachine:
+        assigned === scheduled || !scheduled
+          ? assigned
+          : `${assigned} (${scheduled})`,
+      extrusionCompleted: row.extrusionCompleted === 'true' ? '🟢' : '🔴'
+    };
+  });
+}
 
   // prettier-ignore
   const fields = [
