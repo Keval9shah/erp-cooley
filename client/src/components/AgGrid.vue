@@ -1,49 +1,46 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { AgGridVue } from 'ag-grid-vue3'
-import { useCsvParser } from '../../composables/useCSVParser'
+import { useCsvParser } from '../composables/useCSVParser'
 // @ts-ignore
-import dummyText from "../../assets/dummy.txt?raw"
+import dummyText from "../assets/dummy2.txt?raw"
 
 import 'ag-grid-community/styles/ag-grid.css'
 import 'ag-grid-community/styles/ag-theme-alpine.css'
 
 import { ModuleRegistry, AllCommunityModule } from 'ag-grid-community'
-import type { GridApi, GridOptions, ColDef } from 'ag-grid-community'
-import { RowGroupingModule, RowGroupingPanelModule } from 'ag-grid-enterprise'
+import type { GridApi, GridOptions, ColDef, RowStyle } from 'ag-grid-community'
 
 // max((available master + fab meter prod)* panels, fg req) - a grade comp 
 
 ModuleRegistry.registerModules([AllCommunityModule])
-ModuleRegistry.registerModules([RowGroupingModule, RowGroupingPanelModule])
 
 const { rowData, parseCsv } = useCsvParser()
 const rawCsv = ref('')
 const showModal = ref(false)
-const tempCsv = ref('')
 
 const gridApi = ref<GridApi | null>(null)
 
 const columnDefs: ColDef[] = [
-  { headerName: 'MO Status', field: 'moStatus', enableRowGroup: true },
-  { headerName: 'SO Promise Date', field: 'soPromiseDate', valueFormatter: formatDateCell, filter: 'agDateColumnFilter', enableRowGroup: true },
+  { headerName: 'MO Status', field: 'moStatus', /* enableRowGroup: true*/ },
+  { headerName: 'SO Promise Date', field: 'soPromiseDate', valueFormatter: formatDateCell, filter: 'agDateColumnFilter', /* enableRowGroup: true*/ },
   { headerName: 'Fab to Inspect/Unassign', field: 'fabToInspectUnassign' },
   { headerName: 'FG Panel Items', field: 'fgPanelItems', width: 135 },
   { headerName: 'FG MO', field: 'fgMo' },
-  { headerName: 'Fab Item', field: 'fabItem', enableRowGroup: true },
-  { headerName: 'Ship To Customer', field: 'shipToCustomerName' , enableRowGroup: true },
+  { headerName: 'Fab Item', field: 'fabItem', /* enableRowGroup: true*/ },
+  { headerName: 'Ship To Customer', field: 'shipToCustomerName' , /* enableRowGroup: true*/ },
   { headerName: 'Core Size', field: 'coreSize' },
   { headerName: 'A Grade Completed', field: 'aGradeCompleted' },
   { headerName: 'FG Req Qty', field: 'fgReqQty' },
   { headerName: 'Fab Metres Prod.', field: 'fabMetresProd' },
   { headerName: 'Available Master Qty', field: 'availableMasterQty' },
   { headerName: 'Fab MO', field: 'fabMo' },
+  { headerName: 'Target Roll Len', field: 'targetRollLen' },
+  { headerName: 'Hrs', field: 'hrs' },
+  { headerName: 'Assigned Machine', field: 'assignedMachine', /* enableRowGroup: true*/ },
   { headerName: 'Fab Description', field: 'fabDescription' },
 //   { headerName: 'Sold To', field: 'soldTo', enableRowGroup: true },
   { headerName: 'Prod Structure', field: 'prodStructure' },
-  { headerName: 'Assigned Machine', field: 'assignedMachine', enableRowGroup: true },
-  { headerName: 'Target Roll Len', field: 'targetRollLen' },
-  { headerName: 'Hrs', field: 'hrs' },
   { headerName: '# Of Aframes', field: 'numOfAframes' },
   { headerName: 'Extrusion Completed', field: 'extrusionCompleted' },
   { headerName: 'Destination', field: 'dest' },
@@ -61,10 +58,8 @@ const columnDefsWithTooltips = columnDefs.map(col => ({
 }))
 
 parseCsv(dummyText)
-// rawCsv.value = dummyText
 
 function openModal() {
-  tempCsv.value = rawCsv.value
   showModal.value = true
 }
 
@@ -73,9 +68,9 @@ function closeModal() {
 }
 
 function applyCsv() {
-  rawCsv.value = tempCsv.value
   parseCsv(rawCsv.value)
   resizeCells();
+  rawCsv.value = '';
   showModal.value = false
 }
 
@@ -98,7 +93,7 @@ function resizeCells() {
     state: [
       {
         colId: 'fgPanelItems',
-        width: 120,
+        width: 140,
       },
       {
         colId: 'shipToCustomerName',
@@ -107,14 +102,13 @@ function resizeCells() {
     ],
     applyOrder: false,
   })
-//   const mostColumnIds: string[] = []
-//   gridApi.value?.getAllGridColumns().forEach((col) => {
-//     if (col.getColId() !== 'fgPanelItems') {
-//       mostColumnIds.push(col.getColId())
-//     }
-//   })
-//   gridApi.value?.autoSizeColumns(mostColumnIds)
 }
+
+function onHamburgerClick() {
+  console.log("Hamburger menu clicked");
+  // You can open a sidebar, modal, or dropdown here
+}
+
 
 const gridOptions: GridOptions = {
   columnDefs: columnDefsWithTooltips,
@@ -125,9 +119,9 @@ const gridOptions: GridOptions = {
     resizable: true,
     minWidth: 80,
   },
-  groupDisplayType: 'groupRows',
+//   groupDisplayType: 'groupRows',
   tooltipShowDelay: 0,
-  rowGroupPanelShow: "always",
+//   rowGroupPanelShow: "always",
   multiSortKey:'ctrl',
   rowSelection: {
     mode: 'multiRow',
@@ -140,28 +134,52 @@ const gridOptions: GridOptions = {
   onGridReady: (params: any) => {
     gridApi.value = params.api
     params.api.setFilterModel({
-    moStatus: {
-      type: 'notContains',
-      filter: 'closed',
-      filterType: 'text',
-    },
-  });
+      moStatus: {
+        type: 'notContains',
+        filter: 'closed',
+        filterType: 'text',
+      },
+    });
+    params.api.applyColumnState({ state: [
+      { colId: 'soPromiseDate', sort: 'asc', sortIndex: 0 },
+      { colId: "fabToInspectUnassign", sort: "desc", sortIndex: 1 },
+    ]});
   },
   onFirstDataRendered: resizeCells,
+  getRowStyle: (params) => {
+    const data = params.data;
+    const fabToInspect = parseInt(data.fabToInspectUnassign.replace(/,/g, '')) || 0;
+    const master = parseInt(data.availableMasterQty.replace(/,/g, '')) || 0;
+    const aGradeComp = parseInt(data.aGradeCompleted.replace(/,/g, '')) || 0;
+    const req = parseInt(data.fgReqQty.replace(/,/g, '')) || 0;
+
+    if (req === 0) return {}; // avoid division by 0
+
+    const ratio = ((fabToInspect + master) * 100) / (req - aGradeComp);
+    if (ratio < 20 && req > aGradeComp) {
+      return { backgroundColor: '#eee' }; // light gray
+    }
+    return {} as RowStyle;
+  }
 }
 </script>
 
 
 <template>
   <div class="ag-grid-tab">
-    <button @click="openModal">Add/Update Data</button>
+    <div class="ag-grid-tab-header">
+      <button @click="openModal">Add/Update Data</button>
+      <button class="hamburger-menu" @click="onHamburgerClick">
+        &#9776;
+      </button>
+    </div>
 
     <!-- Modal -->
     <div v-if="showModal" class="modal-overlay">
       <div class="modal">
         <h3>Paste CSV or Excel rows</h3>
         <textarea
-          v-model="tempCsv"
+          v-model="rawCsv"
           placeholder="Paste CSV or Excel rows here"
           rows="10"
           style="width: 100%;"

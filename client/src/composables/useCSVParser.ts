@@ -8,6 +8,11 @@ export function useCsvParser() {
     const assigned = row.assignedMachine?.trim() || '';
     const scheduled = row.scheduledMachine?.trim() || '';
 
+    const fgMo = row.fgMo || '';
+    if (fgMo.startsWith('0000')) {
+      row.fgMo = fgMo.slice(4);
+    }
+
     return {
       ...row,
 

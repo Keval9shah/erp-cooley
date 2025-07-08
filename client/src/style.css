@@ -14,13 +14,9 @@
 }
 
 .ag-theme-alpine {
-  text-align: left;
-  height: calc( 100vh - 5rem - 42px );
+  /* text-align: left; */
+  height: calc( 100vh - 2rem - 42px );
   margin-top: 1rem;
-}
-
-nav button:first-of-type {
-  margin-right: 15px;
 }
 
 a {
@@ -48,6 +44,12 @@ h1 {
   line-height: 1.1;
 }
 
+.ag-grid-tab-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
 button {
   border-radius: 8px;
   border: 1px solid transparent;
@@ -58,6 +60,7 @@ button {
   background-color: #1a1a1a;
   cursor: pointer;
   transition: border-color 0.25s;
+  margin: 0 1rem;
 }
 button:hover {
   border-color: #646cff;
@@ -65,6 +68,13 @@ button:hover {
 button:focus,
 button:focus-visible {
   outline: 4px auto -webkit-focus-ring-color;
+}
+
+.ag-floating-filter-button-button {
+  margin: 0 4px;
+}
+.ag-floating-filter-button {
+  margin-left: 0 !important;
 }
 
 .ag-popup 
@@ -85,9 +95,10 @@ button:focus-visible {
 #app {
   width: 100%;
   margin: 0 auto;
-  padding: 2rem;
+  padding: 1rem 0 0 0;
   text-align: center;
 }
+
 
 @media (prefers-color-scheme: light) {
   :root {

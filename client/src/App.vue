@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import AgGridTab from './components/tabs/AgGridTab.vue'
+import AgGridTab from './components/AgGrid.vue'
 import './style.css'
 
 </script>
