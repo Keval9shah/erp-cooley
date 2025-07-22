@@ -8,10 +8,18 @@ export function useCsvParser() {
     const assigned = row.assignedMachine?.trim() || '';
     const scheduled = row.scheduledMachine?.trim() || '';
 
-    const fgMo = row.fgMo || '';
-    if (fgMo.startsWith('0000')) {
-      row.fgMo = fgMo.slice(4);
+    //how to capitalize the shipToCustomerName so from 'GE INC' to 'Ge Inc'
+    if (row.shipToCustomerName) {
+      row.shipToCustomerName = row.shipToCustomerName
+        .split(' ')
+        .map((word: string) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+        .join(' ');
     }
+    ['fgMo', 'fabMo'].forEach((key) => {
+      if (row[key] && row[key].length > 0) {
+        row[key] = row[key].replace(/^0+/, '').replace(/^USE\s+/, '');
+      }
+    });
 
     return {
       ...row,
