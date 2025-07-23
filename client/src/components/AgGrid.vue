@@ -12,8 +12,6 @@ import { ModuleRegistry, AllCommunityModule } from "ag-grid-community";
 import type { GridApi, GridOptions, ColDef, RowStyle } from "ag-grid-community";
 ModuleRegistry.registerModules([AllCommunityModule]);
 
-// max((available master + fab meter prod)* panels, fg req) - a grade comp
-
 const { rowData, parseCsv } = useCsvParser();
 const rawCsv = ref("");
 const showModal = ref(false);
@@ -58,13 +56,8 @@ const columnDefsWithTooltips = columnDefs.map((col) => ({
 
 parseCsv(dummyText);
 
-// CSV modal handlers
-function openModal() {
-  showModal.value = true;
-}
-function closeModal() {
-  showModal.value = false;
-}
+function openModal() { showModal.value = true; }
+function closeModal() { showModal.value = false; }
 function applyCsv() {
   parseCsv(rawCsv.value);
   resizeCells();
@@ -72,9 +65,7 @@ function applyCsv() {
   showModal.value = false;
 }
 
-// Filter state
-type FilterState = "all" | "slitter" | "inspection" | "mill";
-const currentFilterState = ref<FilterState>("all");
+const currentFilterState = ref<string>("all");
 const showDropdown = ref(false);
 
 const filterButtonText = computed(() => {
@@ -92,52 +83,62 @@ const filterButtonText = computed(() => {
   }
 });
 
-function applyGridFilter() {
-  const currentModel = gridApi.value?.getFilterModel() || {};
+//Data
+let currentIndex = 0;
+const noOfToggles = 3;
+let filterStates: string[] = ["all", "inspection", "slitter", "mill"];
+const filterModels: Record<string, Partial<any>> = {
+  slitter: {
+    assignedMachine: { type: "contains", filter: "SLITTER", filterType: "text" },
+    shipToCustomer: undefined,
+  },
+  inspection: {
+    assignedMachine: { type: "contains", filter: "INSP", filterType: "text" },
+    shipToCustomer: { type: "notContains", filter: "MILL", filterType: "text" },
+  },
+  mill: {
+    assignedMachine: undefined,
+    shipToCustomer: { type: "contains", filter: "MILL", filterType: "text" },
+  },
+  all: {
+    assignedMachine: undefined,
+    shipToCustomer: undefined,
+  },
+};
 
-  if (currentFilterState.value === "slitter") {
-    currentModel.assignedMachine = { type: "contains", filter: "SLITTER", filterType: "text" };
-    delete currentModel.shipToCustomer;
-  } else if (currentFilterState.value === "inspection") {
-    currentModel.assignedMachine = { type: "contains", filter: "INSP", filterType: "text" };
-    currentModel.shipToCustomer = { type: "notContains", filter: "MILL", filterType: "text" };
-  } else if (currentFilterState.value === "mill") {
-    delete currentModel.assignedMachine;
-    currentModel.shipToCustomer = { type: "contains", filter: "MILL", filterType: "text" };
-  } else if (currentFilterState.value === "all") {
-    delete currentModel.assignedMachine;
-    delete currentModel.shipToCustomer;
-  }
+function applyGridFilter() {
+  const currentModel = gridApi.value?.getFilterModel() ?? {};
+  const update = filterModels[currentFilterState.value];
+
+  Object.entries(update).forEach(([key, value]) => {
+    if (value !== undefined) {
+      currentModel[key] = value;
+    } else {
+      delete currentModel[key];
+    }
+  });
 
   gridApi.value?.setFilterModel(currentModel);
   resizeCells();
 }
 
 function cycleFilterOptions() {
-  if (currentFilterState.value === "all") currentFilterState.value = "slitter";
-  else if (currentFilterState.value === "slitter") currentFilterState.value = "inspection";
-  // else if (currentFilterState.value === 'inspection') currentFilterState.value = 'mill'
-  else currentFilterState.value = "all";
+  currentIndex = (currentIndex + 1) % noOfToggles;
+  currentFilterState.value = filterStates[currentIndex];
   applyGridFilter();
   showDropdown.value = false;
 }
 
-function selectFilterOption(option: FilterState) {
+function selectFilterOption(option: string) {
   currentFilterState.value = option;
   applyGridFilter();
   showDropdown.value = false;
 }
 
-function toggleDropdown() {
-  showDropdown.value = !showDropdown.value;
-}
+const toggleDropdown = () => { showDropdown.value = !showDropdown.value }
 
-onMounted(() => {
-  document.addEventListener("click", closeDropdown);
-});
-onUnmounted(() => {
-  document.removeEventListener("click", closeDropdown);
-});
+onMounted(() => document.addEventListener("click", closeDropdown));
+onUnmounted(() => document.removeEventListener("click", closeDropdown));
 
 function closeDropdown(event: MouseEvent) {
   const target = event.target as HTMLElement;
@@ -177,13 +178,8 @@ function onHamburgerClick() {}
 // Function to extract number of panels
 function getNumberOfPanels(fgPanelItems: string): number {
   if (!fgPanelItems) return 1;
-
-  // Regex to find a number followed by 'x' (e.g., '5x')
   const match = fgPanelItems.match(/(\d+)x/);
-  if (match && match[1]) {
-    return parseInt(match[1], 10);
-  }
-
+  if (match && match[1]) { return parseInt(match[1], 10); }
   return 1;
 }
 
@@ -197,9 +193,7 @@ const gridOptions: GridOptions = {
     minWidth: 80,
   },
   rowHeight: 35,
-  //   groupDisplayType: 'groupRows',
   tooltipShowDelay: 0,
-  //   rowGroupPanelShow: "always",
   multiSortKey: "ctrl",
   rowSelection: {
     mode: "multiRow",
@@ -261,8 +255,8 @@ const gridOptions: GridOptions = {
 
         <div v-if="showDropdown" id="filter-dropdown-menu" class="filter-dropdown-menu">
           <button @click="selectFilterOption('all')" :class="{ active: currentFilterState === 'all' }">All Jobs</button>
-          <button @click="selectFilterOption('slitter')" :class="{ active: currentFilterState === 'slitter' }">Slitter</button>
           <button @click="selectFilterOption('inspection')" :class="{ active: currentFilterState === 'inspection' }">Inspection</button>
+          <button @click="selectFilterOption('slitter')" :class="{ active: currentFilterState === 'slitter' }">Slitter</button>
           <button @click="selectFilterOption('mill')" :class="{ active: currentFilterState === 'mill' }">Kickouts</button>
         </div>
       </div>
@@ -285,75 +279,3 @@ const gridOptions: GridOptions = {
     </div>
   </div>
 </template>
-
-<style scoped>
-.ag-grid {
-  width: 100%;
-  height: 100%;
-}
-
-.contextual-filter-button {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  cursor: pointer;
-}
-
-.filter-text {
-  cursor: pointer;
-}
-
-.dropdown-arrow {
-  cursor: pointer;
-  padding: 0 6px;
-  min-width: 24px;
-  text-align: center;
-}
-
-.modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(0, 0, 0, 0.6);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-}
-
-.modal {
-  background: #242424;
-  padding: 2rem;
-  padding-bottom: 2rem;
-  border-radius: 6px;
-  width: 90%;
-  max-width: 700px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
-}
-
-.modal h3 {
-  margin-top: 0;
-}
-.modal button {
-  margin-left: 10px;
-}
-
-.modal-actions {
-  margin-top: 1rem;
-  text-align: right;
-}
-
-.filter-button-group button:first-child {
-  margin-right: 0;
-  border-radius: 8px 0 0 8px;
-  border-right: 1px solid #ccc;
-}
-.filter-button-group button:nth-child(2) {
-  margin-left: 0;
-  border-radius: 0 8px 8px 0;
-  padding: 0.6em 1em;
-}
-
-</style>
