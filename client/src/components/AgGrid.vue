@@ -22,7 +22,7 @@ const gridApi = ref<GridApi | null>(null);
 const columnDefs: ColDef[] = [
   { headerName: "MO Status", field: "moStatus" /* enableRowGroup: true*/ },
   { headerName: "SO Promise Date", field: "soPromiseDate", valueFormatter: formatDateCell, filter: "agDateColumnFilter" /* enableRowGroup: true*/ },
-  { headerName: "Fab to Inspect/Unassign", field: "fabToInspectUnassign", valueGetter: (params) => parseFloat((params.data.fabMetresProd || "0").replace(/,/g, '')), valueFormatter: (params) =>
+  { headerName: "Fab to Inspect/Unassign", field: "fabToInspectUnassign", valueGetter: (params) => parseFloat((params.value || "0").replace(/,/g, '')), valueFormatter: (params) =>
     params.value != null ? params.value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "", },
   { headerName: "FG Panel Items", field: "fgPanelItems", width: 135 },
   { headerName: "FG MO", field: "fgMo" },
