@@ -36,7 +36,9 @@ export function useGridFilters(gridApi: any, resizeCells: () => void) {
   };
 
   const dateFilterModels: Record<string, Partial<any>> = {
-    all: {},
+    all: {
+      soPromiseDate: undefined
+    },
     thisWeek: {
       soPromiseDate: { type: "lessThan", dateFrom: getWeekDay("end", 0) },
     },
