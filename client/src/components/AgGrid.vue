@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from "vue";
+import { useGridFilters } from "../composables/useGridFilters";
+import { ref, onMounted, onUnmounted } from "vue";
 import { AgGridVue } from "ag-grid-vue3";
 import { useCsvParser } from "../composables/useCSVParser";
 // @ts-ignore
@@ -21,7 +22,8 @@ const gridApi = ref<GridApi | null>(null);
 const columnDefs: ColDef[] = [
   { headerName: "MO Status", field: "moStatus" /* enableRowGroup: true*/ },
   { headerName: "SO Promise Date", field: "soPromiseDate", valueFormatter: formatDateCell, filter: "agDateColumnFilter" /* enableRowGroup: true*/ },
-  { headerName: "Fab to Inspect/Unassign", field: "fabToInspectUnassign" },
+  { headerName: "Fab to Inspect/Unassign", field: "fabToInspectUnassign", valueGetter: (params) => parseFloat((params.data.fabMetresProd || "0").replace(/,/g, '')), valueFormatter: (params) =>
+    params.value != null ? params.value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "", },
   { headerName: "FG Panel Items", field: "fgPanelItems", width: 135 },
   { headerName: "FG MO", field: "fgMo" },
   { headerName: "Fab Item", field: "fabItem" /* enableRowGroup: true*/ },
@@ -65,74 +67,27 @@ function applyCsv() {
   showModal.value = false;
 }
 
-const currentFilterState = ref<string>("all");
-const showDropdown = ref(false);
-
-const filterButtonText = computed(() => {
-  switch (currentFilterState.value) {
-    case "all":
-      return "All Jobs";
-    case "slitter":
-      return "Slitter Jobs";
-    case "inspection":
-      return "Inspection Jobs";
-    case "mill":
-      return "Kickouts";
-    default:
-      return "Filter Jobs";
-  }
-});
-
 //Data
-let currentIndex = 0;
+let currentJobTypeIndex = 0;
 const noOfToggles = 3;
-let filterStates: string[] = ["all", "inspection", "slitter", "mill"];
-const filterModels: Record<string, Partial<any>> = {
-  slitter: {
-    assignedMachine: { type: "contains", filter: "SLITTER", filterType: "text" },
-    shipToCustomer: undefined,
-  },
-  inspection: {
-    assignedMachine: { type: "contains", filter: "INSP", filterType: "text" },
-    shipToCustomer: { type: "notContains", filter: "MILL", filterType: "text" },
-  },
-  mill: {
-    assignedMachine: undefined,
-    shipToCustomer: { type: "contains", filter: "MILL", filterType: "text" },
-  },
-  all: {
-    assignedMachine: undefined,
-    shipToCustomer: undefined,
-  },
-};
+let jobTypeFilterStates: string[] = ["all", "inspection", "slitter", "mill"];
 
-function applyGridFilter() {
-  const currentModel = gridApi.value?.getFilterModel() ?? {};
-  const update = filterModels[currentFilterState.value];
-
-  Object.entries(update).forEach(([key, value]) => {
-    if (value !== undefined) {
-      currentModel[key] = value;
-    } else {
-      delete currentModel[key];
-    }
-  });
-
-  gridApi.value?.setFilterModel(currentModel);
-  resizeCells();
-}
-
-function cycleFilterOptions() {
-  currentIndex = (currentIndex + 1) % noOfToggles;
-  currentFilterState.value = filterStates[currentIndex];
+function cycleJobTypeFilterOptions() {
+  currentJobTypeIndex = (currentJobTypeIndex + 1) % noOfToggles;
+  currentFilterState.value = jobTypeFilterStates[currentJobTypeIndex];
   applyGridFilter();
   showDropdown.value = false;
 }
 
-function selectFilterOption(option: string) {
-  currentFilterState.value = option;
+let currentDateIndex = 0;
+const dateFilterStates: string[] = ["all", "thisWeek", "nextWeek"];
+
+function cycleDateFilterOptions() {
+  currentDateIndex = (currentDateIndex + 1) % dateFilterStates.length;
+  currentDateFilterState.value = dateFilterStates[currentDateIndex];
+  console.log("Current Date Filter State:", currentDateFilterState.value);
   applyGridFilter();
-  showDropdown.value = false;
+  showDateDropdown.value = false;
 }
 
 const toggleDropdown = () => { showDropdown.value = !showDropdown.value }
@@ -239,16 +194,30 @@ const gridOptions: GridOptions = {
     return {} as RowStyle;
   },
 };
+
+const { 
+  currentFilterState,
+  currentDateFilterState,
+  showDropdown,
+  showDateDropdown,
+  jobTypeFilterButtonText,
+  dateFilterButtonText,
+  applyGridFilter,
+  selectFilterOption,
+  selectDateFilterOption,
+} = useGridFilters(gridApi, resizeCells);
 </script>
 
 <template>
   <div class="ag-grid-tab">
     <div class="ag-grid-tab-header">
-      <button @click="openModal">Add/Update Data</button>
+      <button class="hamburger-menu" @click="onHamburgerClick">&#9776;</button>
+
+      <!-- Job Type Filter -->
       <div class="contextual-filter-container">
         <div class="filter-button-group">
-          <button class="filter-main-btn" @click="cycleFilterOptions">
-            {{ filterButtonText }}
+          <button class="filter-main-btn" @click="cycleJobTypeFilterOptions">
+            {{ jobTypeFilterButtonText }}
           </button>
           <button class="filter-arrow-btn" @click.stop="toggleDropdown">▼</button>
         </div>
@@ -260,7 +229,24 @@ const gridOptions: GridOptions = {
           <button @click="selectFilterOption('mill')" :class="{ active: currentFilterState === 'mill' }">Kickouts</button>
         </div>
       </div>
-      <button class="hamburger-menu" @click="onHamburgerClick">&#9776;</button>
+
+      <!-- Date Filter -->
+      <div class="contextual-filter-container">
+        <div class="filter-button-group">
+          <button class="filter-main-btn" @click="cycleDateFilterOptions">
+            {{ dateFilterButtonText }}
+          </button>
+          <button class="filter-arrow-btn" @click.stop="showDateDropdown = !showDateDropdown">▼</button>
+        </div>
+
+        <div v-if="showDateDropdown" class="filter-dropdown-menu">
+          <button @click="selectDateFilterOption('all')" :class="{ active: currentDateFilterState === 'all' }">All Dates</button>
+          <button @click="selectDateFilterOption('thisWeek')" :class="{ active: currentDateFilterState === 'thisWeek' }">This Week</button>
+          <button @click="selectDateFilterOption('nextWeek')" :class="{ active: currentDateFilterState === 'nextWeek' }">Next Week</button>
+        </div>
+      </div>
+
+      <button @click="openModal">Add/Update Data</button>
     </div>
 
     <div v-if="showModal" class="modal-overlay">
