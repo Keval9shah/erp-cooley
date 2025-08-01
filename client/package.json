@@ -11,6 +11,7 @@
     "deploy": "gh-pages -d dist"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.53.0",
     "ag-grid-community": "^33.3.2",
     "ag-grid-enterprise": "^33.3.2",
     "ag-grid-vue3": "^33.3.2",

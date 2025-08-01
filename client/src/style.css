@@ -15,8 +15,7 @@
 
 .ag-theme-alpine {
   /* text-align: left; */
-  height: calc( 100vh - 2rem - 42px );
-  margin-top: 1rem;
+  height: calc( 100vh - 320px );
 }
 
 a {
@@ -44,23 +43,40 @@ h1 {
   line-height: 1.1;
 }
 
-.ag-grid-tab-header {
+.toolbar-header {
+  border-right: 1px solid #ccc;
+  min-width: fit-content;
   display: flex;
+  flex-direction: column;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
+  margin-top: 10px;
+  padding: 1rem;
+}
+
+.header {
+  margin-top: 12px;
+  font-size: 28px;
+  font-family: fantasy;
+  text-wrap: wrap;
+  width: 125px;
+  padding-left: 8px;
+}
+
+.toolbar > * {
+  margin-bottom: 10px;
 }
 
 button {
-  border-radius: 8px;
+  border-radius: 7px;
   border: 1px solid transparent;
-  padding: 0.6em 1.2em;
+  padding: 0.5em 0.8em;
   font-size: 1em;
   font-weight: 500;
   font-family: inherit;
   background-color: #1a1a1a;
   cursor: pointer;
   transition: border-color 0.25s;
-  margin: 0 1rem;
 }
 button:hover {
   border-color: #646cff;
@@ -95,7 +111,6 @@ button:focus-visible {
 #app {
   width: 100%;
   margin: 0 auto;
-  padding: 1rem 0 0 0;
   text-align: center;
 }
 
@@ -156,8 +171,8 @@ button:focus-visible {
   padding: 2rem;
   padding-bottom: 2rem;
   border-radius: 6px;
-  width: 90%;
-  max-width: 700px;
+  width: 88%;
+  height: 75%;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
 }
 
@@ -175,11 +190,85 @@ button:focus-visible {
 
 .filter-button-group button:first-child {
   margin-right: 0;
-  border-radius: 8px 0 0 8px;
+  border-radius: 7px 0 0 7px;
   border-right: 1px solid #ccc;
 }
 .filter-button-group button:nth-child(2) {
   margin-left: 0;
-  border-radius: 0 8px 8px 0;
-  padding: 0.6em 1em;
+  border-radius: 0 7px 7px 0;
+}
+
+textarea {
+  width: 100%;
+  height: calc(100% - 110px);
+  white-space: pre;
+}
+
+.util-group {
+  display: flex;
+  flex-direction: row;
+  width: 100%;
+}
+
+.machines {
+  height: 288px;
+  background-color: #22282e;
+  display: flex;
+  overflow-x: auto;
+  gap: 1rem;
+  padding: 1rem;
+  justify-content: space-between;
+}
+.machine-card {
+  flex: 1;
+  min-width: 300px;
+  max-width: 300px;
+  background-color: #151b1f;
+  padding: 1rem;
+  padding-top: 0.5rem;
+  border-radius: 1rem;
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+}
+.machine-orders {
+  margin-top: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.order-card {
+  background: #3a3a4d;
+  padding: 0.5rem;
+  border-radius: 0.5rem;
+  cursor: grab;
+  font-size: 0.85rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+.order-card:hover {
+  background: #4a4a5a;
+}
+.order-id {
+  font-weight: bold;
+}
+.order-item,
+.order-date {
+  opacity: 0.8;
+}
+
+.machine-name {
+  font-weight: bold;
+  font-size: 32px;
+  text-align: center;
+  font-family: fantasy;
+}
+
+.machine-name span {
+  color: #646cff;
+  font-size: 24px;
+  vertical-align: super;
+  margin-right: 4px;
 }

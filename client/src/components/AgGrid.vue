@@ -20,14 +20,14 @@ const showModal = ref(false);
 const gridApi = ref<GridApi | null>(null);
 
 const columnDefs: ColDef[] = [
-  { headerName: "MO Status", field: "moStatus" /* enableRowGroup: true*/ },
-  { headerName: "SO Promise Date", field: "soPromiseDate", valueFormatter: formatDateCell, filter: "agDateColumnFilter" /* enableRowGroup: true*/ },
-  { headerName: "Fab to Inspect/Unassign", field: "fabToInspectUnassign", valueGetter: (params) => parseFloat((params.value || "0").replace(/,/g, '')), valueFormatter: (params) =>
+  { headerName: "MO Status", field: "moStatus" },
+  { headerName: "SO Promise Date", field: "soPromiseDate", valueFormatter: formatDateCell, filter: "agDateColumnFilter" },
+  { headerName: "Fab to Inspect/Unassign", field: "fabToInspectUnassign", valueGetter: (params) => parseFloat((params.data.fabToInspectUnassign || "0").replace(/,/g, '')), valueFormatter: (params) =>
     params.value != null ? params.value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "", },
   { headerName: "FG Panel Items", field: "fgPanelItems", width: 135 },
   { headerName: "FG MO", field: "fgMo" },
-  { headerName: "Fab Item", field: "fabItem" /* enableRowGroup: true*/ },
-  { headerName: "Ship To Customer", field: "shipToCustomerName" /* enableRowGroup: true*/ },
+  { headerName: "Fab Item", field: "fabItem" },
+  { headerName: "Ship To Customer", field: "shipToCustomerName" },
   { headerName: "Core Size", field: "coreSize" },
   { headerName: "A Grade Completed", field: "aGradeCompleted" },
   { headerName: "FG Req Qty", field: "fgReqQty" },
@@ -36,7 +36,7 @@ const columnDefs: ColDef[] = [
   { headerName: "Fab MO", field: "fabMo" },
   { headerName: "Target Roll Len", field: "targetRollLen" },
   { headerName: "Hrs", field: "hrs" },
-  { headerName: "Assigned Machine", field: "assignedMachine" /* enableRowGroup: true*/ },
+  { headerName: "Assigned Machine", field: "assignedMachine" },
   { headerName: "Fab Description", field: "fabDescription" },
   //   { headerName: 'Sold To', field: 'soldTo', enableRowGroup: true },
   { headerName: "Prod Structure", field: "prodStructure" },
@@ -85,12 +85,9 @@ const dateFilterStates: string[] = ["all", "thisWeek", "nextWeek"];
 function cycleDateFilterOptions() {
   currentDateIndex = (currentDateIndex + 1) % dateFilterStates.length;
   currentDateFilterState.value = dateFilterStates[currentDateIndex];
-  console.log("Current Date Filter State:", currentDateFilterState.value);
   applyGridFilter();
   showDateDropdown.value = false;
 }
-
-const toggleDropdown = () => { showDropdown.value = !showDropdown.value }
 
 onMounted(() => document.addEventListener("click", closeDropdown));
 onUnmounted(() => document.removeEventListener("click", closeDropdown));
@@ -127,8 +124,6 @@ function resizeCells() {
     applyOrder: false,
   });
 }
-
-function onHamburgerClick() {}
 
 // Function to extract number of panels
 function getNumberOfPanels(fgPanelItems: string): number {
@@ -206,56 +201,123 @@ const {
   selectFilterOption,
   selectDateFilterOption,
 } = useGridFilters(gridApi, resizeCells);
+
+const machineQueues = ref<Record<string, any[]>>({
+  "#2": [],
+  "#5": [],
+  "#6": [],
+  "Cooper": [],
+  "#7": [],
+  "SL #1": [],
+  "SL #2": [],
+});
+
+const draggedOrder = ref<any>(null);
+const draggedFrom = ref<string | null>(null);
+
+function handleDragStart(order: any, machine: string) {
+  draggedOrder.value = order;
+  draggedFrom.value = machine;
+}
+
+function handleDrop(machine: string, event: DragEvent) {
+  if (!draggedOrder.value) return;
+  console.log(event);
+  if (draggedFrom.value) {
+    machineQueues.value[draggedFrom.value] = machineQueues.value[draggedFrom.value].filter(
+      (o) => o !== draggedOrder.value
+    );
+  }
+  machineQueues.value[machine].push(draggedOrder.value);
+
+  draggedOrder.value = null;
+  draggedFrom.value = null;
+}
+
+// function onRowDragEnd(event: any) {
+//   const row = event.node.data;
+//   // Example logic: push to a default machine (could add logic here)
+//   machineQueues.value["#2"].push(row);
+// }
+
+function formatMachineName(machine: string) {
+  return machine.replace(/#/g, "<span class='hashtag'>#</span>");
+}
 </script>
 
 <template>
   <div class="ag-grid-tab">
-    <div class="ag-grid-tab-header">
-      <button class="hamburger-menu" @click="onHamburgerClick">&#9776;</button>
-
-      <!-- Job Type Filter -->
-      <div class="contextual-filter-container">
-        <div class="filter-button-group">
-          <button class="filter-main-btn" @click="cycleJobTypeFilterOptions">
-            {{ jobTypeFilterButtonText }}
-          </button>
-          <button class="filter-arrow-btn" @click.stop="toggleDropdown">▼</button>
-        </div>
-
-        <div v-if="showDropdown" id="filter-dropdown-menu" class="filter-dropdown-menu">
-          <button @click="selectFilterOption('all')" :class="{ active: currentFilterState === 'all' }">All Jobs</button>
-          <button @click="selectFilterOption('inspection')" :class="{ active: currentFilterState === 'inspection' }">Inspection</button>
-          <button @click="selectFilterOption('slitter')" :class="{ active: currentFilterState === 'slitter' }">Slitter</button>
-          <button @click="selectFilterOption('mill')" :class="{ active: currentFilterState === 'mill' }">Kickouts</button>
-        </div>
-      </div>
-
-      <!-- Date Filter -->
-      <div class="contextual-filter-container">
-        <div class="filter-button-group">
-          <button class="filter-main-btn" @click="cycleDateFilterOptions">
-            {{ dateFilterButtonText }}
-          </button>
-          <button class="filter-arrow-btn" @click.stop="showDateDropdown = !showDateDropdown">▼</button>
-        </div>
-
-        <div v-if="showDateDropdown" class="filter-dropdown-menu">
-          <button @click="selectDateFilterOption('all')" :class="{ active: currentDateFilterState === 'all' }">All Dates</button>
-          <button @click="selectDateFilterOption('thisWeek')" :class="{ active: currentDateFilterState === 'thisWeek' }">This Week</button>
-          <button @click="selectDateFilterOption('nextWeek')" :class="{ active: currentDateFilterState === 'nextWeek' }">Next Week</button>
-        </div>
-      </div>
-
-      <button @click="openModal">Add/Update Data</button>
-    </div>
 
     <div v-if="showModal" class="modal-overlay">
       <div class="modal">
         <h3>Paste CSV or Excel rows</h3>
-        <textarea v-model="rawCsv" placeholder="Paste CSV or Excel rows here" rows="10" style="width: 100%"></textarea>
+        <textarea v-model="rawCsv" placeholder="Paste CSV or Excel rows here"></textarea>
         <div class="modal-actions">
           <button @click="applyCsv">Apply</button>
           <button @click="closeModal">Cancel</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Machine Queues -->
+    <div class="util-group">
+      <div class="toolbar-header">
+        <div class="header">Better Jomar!</div>
+        <div class="toolbar">
+          <div><button @click="openModal">➕ Data</button></div>
+          <!-- Job Type Filter -->
+          <div class="contextual-filter-container">
+            <div class="filter-button-group">
+              <button class="filter-main-btn" @click="cycleJobTypeFilterOptions">
+                {{ jobTypeFilterButtonText }}
+              </button>
+              <button class="filter-arrow-btn" @click.stop="showDropdown = !showDropdown">▼</button>
+            </div>
+            <div v-if="showDropdown" id="filter-dropdown-menu" class="filter-dropdown-menu">
+              <button @click="selectFilterOption('all')" :class="{ active: currentFilterState === 'all' }">All Jobs</button>
+              <button @click="selectFilterOption('inspection')" :class="{ active: currentFilterState === 'inspection' }">Inspection</button>
+              <button @click="selectFilterOption('slitter')" :class="{ active: currentFilterState === 'slitter' }">Slitter</button>
+              <button @click="selectFilterOption('mill')" :class="{ active: currentFilterState === 'mill' }">Kickouts</button>
+            </div>
+          </div>
+          <!-- Date Filter -->
+          <div class="contextual-filter-container">
+            <div class="filter-button-group">
+              <button class="filter-main-btn" @click="cycleDateFilterOptions">
+                {{ dateFilterButtonText }}
+              </button>
+              <button class="filter-arrow-btn" @click.stop="showDateDropdown = !showDateDropdown">▼</button>
+            </div>
+            <div v-if="showDateDropdown" class="filter-dropdown-menu">
+              <button @click="selectDateFilterOption('all')" :class="{ active: currentDateFilterState === 'all' }">All Dates</button>
+              <button @click="selectDateFilterOption('thisWeek')" :class="{ active: currentDateFilterState === 'thisWeek' }">This Week</button>
+              <button @click="selectDateFilterOption('nextWeek')" :class="{ active: currentDateFilterState === 'nextWeek' }">Next Week</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="machines">
+        <div
+          v-for="machine in ['#2', '#5', '#6', 'Cooper', '#7', 'SL #1', 'SL #2']"
+          :key="machine"
+          class="machine-card"
+          @drop.prevent="handleDrop(machine, $event)"
+          @dragover.prevent
+        >
+          <div class="machine-name" v-html="formatMachineName(machine)"></div>
+          <div class="machine-orders">
+            <div
+              v-for="order in machineQueues[machine]"
+              :key="order.id"
+              class="order-card"
+              draggable="true"
+              @dragstart="handleDragStart(order, machine)"
+            >
+              <div class="order-id">{{ order.fgMo }}</div>
+              <div class="order-item">{{ order.fgItemID }}</div>
+              <div class="order-date">{{ formatDateCell({ value: order.moPromiseDate }) }}</div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
