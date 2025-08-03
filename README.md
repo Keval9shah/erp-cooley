@@ -1,5 +1,5 @@
-TODO
--> Supabase database
--> Drag and Drop
--> Dropdown UI change
+TODO\
+-> Supabase database\
+-> Drag and Drop\
+-> Dropdown UI change\
 -> Textile

@@ -5,7 +5,7 @@
 
   color-scheme: light dark;
   color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
+  background-color: #22282e;
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -15,7 +15,7 @@
 
 .ag-theme-alpine {
   /* text-align: left; */
-  height: calc( 100vh - 320px );
+  height: calc( 100vh - 352px );
 }
 
 a {
@@ -47,6 +47,7 @@ h1 {
   border-right: 1px solid #ccc;
   min-width: fit-content;
   display: flex;
+  background: #242424;
   flex-direction: column;
   justify-content: space-between;
   align-items: flex-start;
@@ -111,20 +112,6 @@ button:focus-visible {
   width: 100%;
   margin: 0 auto;
   text-align: center;
-}
-
-
-@media (prefers-color-scheme: light) {
-  :root {
-    color: #213547;
-    background-color: #ffffff;
-  }
-  a:hover {
-    color: #747bff;
-  }
-  button {
-    background-color: #f9f9f9;
-  }
 }
 
 /* AG GRID */
@@ -210,7 +197,7 @@ textarea {
 }
 
 .machines {
-  height: 288px;
+  height: 320px;
   background-color: #22282e;
   display: flex;
   overflow-x: auto;
@@ -220,8 +207,7 @@ textarea {
 }
 .machine-card {
   flex: 1;
-  min-width: 300px;
-  max-width: 300px;
+  min-width: 350px;
   background-color: #151b1f;
   padding: 1rem;
   padding-top: 0.5rem;

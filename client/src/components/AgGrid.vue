@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useGridFilters } from "../composables/useGridFilters";
-import { ref, onMounted, onUnmounted } from "vue";
+import { ref, onMounted, onUnmounted, reactive } from "vue";
 import { AgGridVue } from "ag-grid-vue3";
 import { useCsvParser } from "../composables/useCSVParser";
 // @ts-ignore
@@ -20,10 +20,9 @@ const showModal = ref(false);
 const gridApi = ref<GridApi | null>(null);
 
 const columnDefs: ColDef[] = [
-  { headerName: "MO Status", field: "moStatus" },
+  { headerName: "MO Status", field: "moStatus", rowDrag: true },
   { headerName: "SO Promise Date", field: "soPromiseDate", valueFormatter: formatDateCell, filter: "agDateColumnFilter" },
-  { headerName: "Fab to Inspect/Unassign", field: "fabToInspectUnassign", valueGetter: (params) => parseFloat((params.data.fabToInspectUnassign || "0").replace(/,/g, '')), valueFormatter: (params) =>
-    params.value != null ? params.value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "", },
+  { headerName: "Fab to Inspect/Unassign", field: "fabToInspectUnassign", valueGetter: (params) => parseFloat((params.data.fabToInspectUnassign || "0").replace(/,/g, "")), valueFormatter: (params) => (params.value != null ? params.value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "") },
   { headerName: "FG Panel Items", field: "fgPanelItems", width: 135 },
   { headerName: "FG MO", field: "fgMo" },
   { headerName: "Fab Item", field: "fabItem" },
@@ -58,35 +57,17 @@ const columnDefsWithTooltips = columnDefs.map((col) => ({
 
 parseCsv(dummyText);
 
-function openModal() { showModal.value = true; }
-function closeModal() { showModal.value = false; }
+function openModal() {
+  showModal.value = true;
+}
+function closeModal() {
+  showModal.value = false;
+}
 function applyCsv() {
   parseCsv(rawCsv.value);
   resizeCells();
   rawCsv.value = "";
   showModal.value = false;
-}
-
-//Data
-let currentJobTypeIndex = 0;
-const noOfToggles = 3;
-let jobTypeFilterStates: string[] = ["all", "inspection", "slitter", "mill"];
-
-function cycleJobTypeFilterOptions() {
-  currentJobTypeIndex = (currentJobTypeIndex + 1) % noOfToggles;
-  currentFilterState.value = jobTypeFilterStates[currentJobTypeIndex];
-  applyGridFilter();
-  showDropdown.value = false;
-}
-
-let currentDateIndex = 0;
-const dateFilterStates: string[] = ["all", "thisWeek", "nextWeek"];
-
-function cycleDateFilterOptions() {
-  currentDateIndex = (currentDateIndex + 1) % dateFilterStates.length;
-  currentDateFilterState.value = dateFilterStates[currentDateIndex];
-  applyGridFilter();
-  showDateDropdown.value = false;
 }
 
 onMounted(() => document.addEventListener("click", closeDropdown));
@@ -129,7 +110,9 @@ function resizeCells() {
 function getNumberOfPanels(fgPanelItems: string): number {
   if (!fgPanelItems) return 1;
   const match = fgPanelItems.match(/(\d+)x/);
-  if (match && match[1]) { return parseInt(match[1], 10); }
+  if (match && match[1]) {
+    return parseInt(match[1], 10);
+  }
   return 1;
 }
 
@@ -152,6 +135,7 @@ const gridOptions: GridOptions = {
     enableSelectionWithoutKeys: true,
     enableClickSelection: true,
   },
+  // rowDragManaged: true,
   suppressColumnVirtualisation: true,
   onGridReady: (params: any) => {
     gridApi.value = params.api;
@@ -167,6 +151,18 @@ const gridOptions: GridOptions = {
         { colId: "soPromiseDate", sort: "asc", sortIndex: 0 },
         { colId: "fabToInspectUnassign", sort: "desc", sortIndex: 1 },
       ],
+    });
+
+    const containers: NodeListOf<HTMLElement> = document.querySelectorAll(".machine-card");
+    containers.forEach((container) => {
+      const dropZoneParams = {
+        getContainer: () => container as HTMLElement,
+        onDragStop: (dragParams: any) => {
+          const { fgMo, fgItemID, soPromiseDate } = dragParams.node.data;
+          machineQueues[container.id].push({ fgMo, fgItemID, soPromiseDate });
+        },
+      };
+      gridApi.value?.addRowDropZone(dropZoneParams);
     });
   },
   onFirstDataRendered: resizeCells,
@@ -190,19 +186,21 @@ const gridOptions: GridOptions = {
   },
 };
 
-const { 
+const {
   currentFilterState,
   currentDateFilterState,
   showDropdown,
   showDateDropdown,
   jobTypeFilterButtonText,
   dateFilterButtonText,
-  applyGridFilter,
+  machinesToShow,
   selectFilterOption,
   selectDateFilterOption,
+  cycleJobTypeFilterOptions,
+  cycleDateFilterOptions
 } = useGridFilters(gridApi, resizeCells);
 
-const machineQueues = ref<Record<string, any[]>>({
+const machineQueues = reactive<Record<string, any[]>>({
   "#2": [],
   "#5": [],
   "#6": [],
@@ -212,34 +210,6 @@ const machineQueues = ref<Record<string, any[]>>({
   "SL #2": [],
 });
 
-const draggedOrder = ref<any>(null);
-const draggedFrom = ref<string | null>(null);
-
-function handleDragStart(order: any, machine: string) {
-  draggedOrder.value = order;
-  draggedFrom.value = machine;
-}
-
-function handleDrop(machine: string, event: DragEvent) {
-  if (!draggedOrder.value) return;
-  console.log(event);
-  if (draggedFrom.value) {
-    machineQueues.value[draggedFrom.value] = machineQueues.value[draggedFrom.value].filter(
-      (o) => o !== draggedOrder.value
-    );
-  }
-  machineQueues.value[machine].push(draggedOrder.value);
-
-  draggedOrder.value = null;
-  draggedFrom.value = null;
-}
-
-// function onRowDragEnd(event: any) {
-//   const row = event.node.data;
-//   // Example logic: push to a default machine (could add logic here)
-//   machineQueues.value["#2"].push(row);
-// }
-
 function formatMachineName(machine: string) {
   return machine.replace(/#/g, "<span class='hashtag'>#</span>");
 }
@@ -247,7 +217,6 @@ function formatMachineName(machine: string) {
 
 <template>
   <div class="ag-grid-tab">
-
     <div v-if="showModal" class="modal-overlay">
       <div class="modal">
         <h3>Paste CSV or Excel rows</h3>
@@ -298,11 +267,10 @@ function formatMachineName(machine: string) {
       </div>
       <div class="machines">
         <div
-          v-for="machine in ['#2', '#5', '#6', 'Cooper', '#7', 'SL #1', 'SL #2']"
+          v-for="machine in machinesToShow"
           :key="machine"
           class="machine-card"
-          @drop.prevent="handleDrop(machine, $event)"
-          @dragover.prevent
+          :id="machine"
         >
           <div class="machine-name" v-html="formatMachineName(machine)"></div>
           <div class="machine-orders">
@@ -311,11 +279,10 @@ function formatMachineName(machine: string) {
               :key="order.id"
               class="order-card"
               draggable="true"
-              @dragstart="handleDragStart(order, machine)"
             >
               <div class="order-id">{{ order.fgMo }}</div>
               <div class="order-item">{{ order.fgItemID }}</div>
-              <div class="order-date">{{ formatDateCell({ value: order.moPromiseDate }) }}</div>
+              <div class="order-date">{{ formatDateCell({ value: order.soPromiseDate }) }}</div>
             </div>
           </div>
         </div>
