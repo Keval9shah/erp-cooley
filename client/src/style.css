@@ -214,16 +214,50 @@ textarea {
   flex: 1;
   min-width: 350px;
   background-color: #151b1f;
-  padding: 1rem;
-  padding-top: 0.5rem;
   border-radius: 1rem;
   color: #fff;
   display: flex;
   flex-direction: column;
   overflow-y: auto;
+  position: relative;
+  scroll-padding-top: 48px;
 }
+
+.machine-name {
+  padding: 0.5rem;
+  position: sticky;
+  top: -10px;
+  z-index: 10;
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+  border-bottom: 1px solid transparent;
+  font-weight: bold;
+  font-size: 32px;
+  text-align: center;
+  font-family: fantasy;
+}
+
+.machine-name.scrolled {
+  background: rgba(255, 255, 255, 0.1);
+  padding-bottom: 5px; /* Adjust this value as needed */
+  font-size: 24px;       /* Adjust this value as needed */
+  transition: all 0.3s ease;
+  text-shadow: 1px 1px 2px rgb(0, 0, 0);
+}
+.machine-name.scrolled span {
+  font-size: 18px; /* Adjust this value as needed */
+}
+
+.machine-name span {
+  color: #646cff;
+  font-size: 24px;
+  vertical-align: super;
+  margin-right: 4px;
+}
+
 .machine-orders {
-  margin-top: 1rem;
+  padding: 12px;
+  padding-top: 0;
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
@@ -263,18 +297,4 @@ textarea {
 .order-item,
 .order-date {
   opacity: 0.8;
-}
-
-.machine-name {
-  font-weight: bold;
-  font-size: 32px;
-  text-align: center;
-  font-family: fantasy;
-}
-
-.machine-name span {
-  color: #646cff;
-  font-size: 24px;
-  vertical-align: super;
-  margin-right: 4px;
 }

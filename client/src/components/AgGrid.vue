@@ -67,7 +67,23 @@ function applyCsv() {
   showModal.value = false;
 }
 
-onMounted(() => document.addEventListener("click", closeDropdown));
+onMounted(() => {
+  document.addEventListener("click", closeDropdown);
+  
+const machineCards = document.querySelectorAll('.machine-card');
+
+machineCards.forEach(machineCard => {
+  const machineName = machineCard.querySelector('.machine-name') as HTMLElement;
+  const originalTop = machineName.offsetTop;
+  machineCard.addEventListener('scroll', () => {
+    if (machineCard.scrollTop > originalTop) {
+      machineName.classList.add('scrolled');
+    } else {
+      machineName.classList.remove('scrolled');
+    }
+  });
+});
+});
 onUnmounted(() => document.removeEventListener("click", closeDropdown));
 
 function closeDropdown(event: MouseEvent) {
