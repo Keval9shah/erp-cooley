@@ -67,7 +67,7 @@ h1 {
   margin-bottom: 10px;
 }
 
-button {
+button.btn {
   border-radius: 7px;
   border: 1px solid transparent;
   padding: 0.5em 0.8em;
@@ -78,11 +78,11 @@ button {
   cursor: pointer;
   transition: border-color 0.25s;
 }
-button:hover {
+button.btn:hover {
   border-color: #646cff;
 }
-button:focus,
-button:focus-visible {
+button.btn:focus,
+button.btn:focus-visible {
   outline: 4px auto -webkit-focus-ring-color;
 }
 
@@ -93,15 +93,16 @@ button:focus-visible {
   margin-left: 0 !important;
 }
 
-.ag-popup 
-{
-  margin: 0px !important;
-  height: 0 !important;
-  min-height:  0 !important;
+.ag-header-cell.ag-floating-filter.ag-focus-managed {
+  gap: 4px;
+  padding: 0 8px;
 }
 
-.ag-dnd-ghost {
-    margin-top: 160px !important;
+.ag-wrapper.ag-input-wrapper.ag-text-field-input-wrapper::before {
+  display: none !important;
+}
+.ag-input-field-input.ag-text-field-input {
+  padding: 0 8px !important;
 }
 
 .card {
@@ -119,6 +120,10 @@ button:focus-visible {
 .ag-grid {
   width: 100%;
   height: 100%;
+}
+
+.ag-row:hover {
+  cursor: pointer;
 }
 
 .contextual-filter-button {
@@ -223,7 +228,23 @@ textarea {
   flex-direction: column;
   gap: 0.5rem;
 }
+.remove-order-btn {
+  background: transparent;
+  border: none;
+  color: #000000;
+  font-weight: bold;
+  cursor: pointer;
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  font-size: 20px;
+  line-height: 1;
+  padding: 0;
+  user-select: none;
+}
+
 .order-card {
+  position: relative; /* so the remove button can be positioned inside */
   background: #3a3a4d;
   padding: 0.5rem;
   border-radius: 0.5rem;

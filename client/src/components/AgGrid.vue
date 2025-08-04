@@ -6,11 +6,8 @@ import { useCsvParser } from "../composables/useCSVParser";
 // @ts-ignore
 import dummyText from "../assets/dummy2.txt?raw";
 
-import "ag-grid-community/styles/ag-grid.css";
-import "ag-grid-community/styles/ag-theme-alpine.css";
-
-import { ModuleRegistry, AllCommunityModule } from "ag-grid-community";
-import type { GridApi, GridOptions, ColDef, RowStyle } from "ag-grid-community";
+import { themeAlpine, ModuleRegistry, AllCommunityModule, colorSchemeDarkBlue } from "ag-grid-community";
+import type { GridApi, GridOptions, ColDef, RowStyle, RowDropZoneParams } from "ag-grid-community";
 ModuleRegistry.registerModules([AllCommunityModule]);
 
 const { rowData, parseCsv } = useCsvParser();
@@ -20,7 +17,7 @@ const showModal = ref(false);
 const gridApi = ref<GridApi | null>(null);
 
 const columnDefs: ColDef[] = [
-  { headerName: "MO Status", field: "moStatus", rowDrag: true },
+  { headerName: "MO Status", field: "moStatus" },
   { headerName: "SO Promise Date", field: "soPromiseDate", valueFormatter: formatDateCell, filter: "agDateColumnFilter" },
   { headerName: "Fab to Inspect/Unassign", field: "fabToInspectUnassign", valueGetter: (params) => parseFloat((params.data.fabToInspectUnassign || "0").replace(/,/g, "")), valueFormatter: (params) => (params.value != null ? params.value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "") },
   { headerName: "FG Panel Items", field: "fgPanelItems", width: 135 },
@@ -106,6 +103,32 @@ function resizeCells() {
   });
 }
 
+const registeredDropZones: Record<string, RowDropZoneParams> = {};
+
+function registerDropZones() {
+  const containers: NodeListOf<HTMLElement> = document.querySelectorAll(".machine-card");
+
+  containers.forEach((container) => {
+    const id = container.id;
+
+    // If already registered, remove the existing drop zone
+    if (registeredDropZones[id]) {
+      gridApi.value?.removeRowDropZone(registeredDropZones[id]);
+    }
+
+    const dropZoneParams = {
+      getContainer: () => container,
+      onDragStop: (dragParams: any) => {
+        const { fgMo, fgItemID, soPromiseDate } = dragParams.node.data;
+        machineQueues[container.id].push({ fgMo, fgItemID, soPromiseDate });
+      },
+    };
+
+    gridApi.value?.addRowDropZone(dropZoneParams);
+    registeredDropZones[id] = dropZoneParams;
+  });
+}
+
 // Function to extract number of panels
 function getNumberOfPanels(fgPanelItems: string): number {
   if (!fgPanelItems) return 1;
@@ -125,7 +148,6 @@ const gridOptions: GridOptions = {
     resizable: true,
     minWidth: 80,
   },
-  rowHeight: 35,
   tooltipShowDelay: 0,
   multiSortKey: "ctrl",
   rowSelection: {
@@ -136,6 +158,9 @@ const gridOptions: GridOptions = {
     enableClickSelection: true,
   },
   // rowDragManaged: true,
+  rowHeight: 40,
+  rowDragEntireRow: true,
+  rowDragText: (params) => `${params.rowNode?.data.fgMo} - ${params.rowNode?.data.fgItemID}`,
   suppressColumnVirtualisation: true,
   onGridReady: (params: any) => {
     gridApi.value = params.api;
@@ -153,17 +178,7 @@ const gridOptions: GridOptions = {
       ],
     });
 
-    const containers: NodeListOf<HTMLElement> = document.querySelectorAll(".machine-card");
-    containers.forEach((container) => {
-      const dropZoneParams = {
-        getContainer: () => container as HTMLElement,
-        onDragStop: (dragParams: any) => {
-          const { fgMo, fgItemID, soPromiseDate } = dragParams.node.data;
-          machineQueues[container.id].push({ fgMo, fgItemID, soPromiseDate });
-        },
-      };
-      gridApi.value?.addRowDropZone(dropZoneParams);
-    });
+    registerDropZones();
   },
   onFirstDataRendered: resizeCells,
   getRowStyle: (params) => {
@@ -180,7 +195,7 @@ const gridOptions: GridOptions = {
     const ratio = (calculatedValueForRatio * 100) / (req - aGradeComp);
 
     if (ratio < 20 && req > aGradeComp) {
-      return { backgroundColor: "#eee" };
+      return { backgroundColor: "#1a1a1a" };
     }
     return {} as RowStyle;
   },
@@ -198,7 +213,7 @@ const {
   selectDateFilterOption,
   cycleJobTypeFilterOptions,
   cycleDateFilterOptions
-} = useGridFilters(gridApi, resizeCells);
+} = useGridFilters(gridApi, resizeCells, registerDropZones);
 
 const machineQueues = reactive<Record<string, any[]>>({
   "#2": [],
@@ -206,13 +221,21 @@ const machineQueues = reactive<Record<string, any[]>>({
   "#6": [],
   "Cooper": [],
   "#7": [],
-  "SL #1": [],
-  "SL #2": [],
+  "SL_#1": [],
+  "SL_#2": [],
 });
 
 function formatMachineName(machine: string) {
-  return machine.replace(/#/g, "<span class='hashtag'>#</span>");
+  return machine.replace(/#/g, "<span class='hashtag'>#</span>").replace(/_/g, " ");
 }
+function removeOrder(machine: string, orderIndex: number) {
+  if (machineQueues[machine]) {
+    machineQueues[machine].splice(orderIndex, 1);
+  }
+}
+
+const myTheme = themeAlpine
+    .withPart(colorSchemeDarkBlue);
 </script>
 
 <template>
@@ -222,8 +245,8 @@ function formatMachineName(machine: string) {
         <h3>Paste CSV or Excel rows</h3>
         <textarea v-model="rawCsv" placeholder="Paste CSV or Excel rows here"></textarea>
         <div class="modal-actions">
-          <button @click="applyCsv">Apply</button>
-          <button @click="closeModal">Cancel</button>
+          <button class="btn" @click="applyCsv">Apply</button>
+          <button class="btn" @click="closeModal">Cancel</button>
         </div>
       </div>
     </div>
@@ -233,34 +256,34 @@ function formatMachineName(machine: string) {
       <div class="toolbar-header">
         <div class="header">Better Jomar!</div>
         <div class="toolbar">
-          <div><button @click="openModal">➕ Data</button></div>
+          <div><button class="btn" @click="openModal">➕ Data</button></div>
           <!-- Job Type Filter -->
           <div class="contextual-filter-container">
             <div class="filter-button-group">
-              <button class="filter-main-btn" @click="cycleJobTypeFilterOptions">
+              <button class="btn filter-main-btn" @click="cycleJobTypeFilterOptions">
                 {{ jobTypeFilterButtonText }}
               </button>
-              <button class="filter-arrow-btn" @click.stop="showDropdown = !showDropdown">▼</button>
+              <button class="btn filter-arrow-btn" @click.stop="showDropdown = !showDropdown">▼</button>
             </div>
             <div v-if="showDropdown" id="filter-dropdown-menu" class="filter-dropdown-menu">
-              <button @click="selectFilterOption('all')" :class="{ active: currentFilterState === 'all' }">All Jobs</button>
-              <button @click="selectFilterOption('inspection')" :class="{ active: currentFilterState === 'inspection' }">Inspection</button>
-              <button @click="selectFilterOption('slitter')" :class="{ active: currentFilterState === 'slitter' }">Slitter</button>
-              <button @click="selectFilterOption('mill')" :class="{ active: currentFilterState === 'mill' }">Kickouts</button>
+              <button class="btn" @click="selectFilterOption('all')" :class="{ active: currentFilterState === 'all' }">All Jobs</button>
+              <button class="btn" @click="selectFilterOption('inspection')" :class="{ active: currentFilterState === 'inspection' }">Inspection</button>
+              <button class="btn" @click="selectFilterOption('slitter')" :class="{ active: currentFilterState === 'slitter' }">Slitter</button>
+              <button class="btn" @click="selectFilterOption('mill')" :class="{ active: currentFilterState === 'mill' }">Kickouts</button>
             </div>
           </div>
           <!-- Date Filter -->
           <div class="contextual-filter-container">
             <div class="filter-button-group">
-              <button class="filter-main-btn" @click="cycleDateFilterOptions">
+              <button class="btn filter-main-btn" @click="cycleDateFilterOptions">
                 {{ dateFilterButtonText }}
               </button>
-              <button class="filter-arrow-btn" @click.stop="showDateDropdown = !showDateDropdown">▼</button>
+              <button class="btn filter-arrow-btn" @click.stop="showDateDropdown = !showDateDropdown">▼</button>
             </div>
             <div v-if="showDateDropdown" class="filter-dropdown-menu">
-              <button @click="selectDateFilterOption('all')" :class="{ active: currentDateFilterState === 'all' }">All Dates</button>
-              <button @click="selectDateFilterOption('thisWeek')" :class="{ active: currentDateFilterState === 'thisWeek' }">This Week</button>
-              <button @click="selectDateFilterOption('nextWeek')" :class="{ active: currentDateFilterState === 'nextWeek' }">Next Week</button>
+              <button class="btn" @click="selectDateFilterOption('all')" :class="{ active: currentDateFilterState === 'all' }">All Dates</button>
+              <button class="btn" @click="selectDateFilterOption('thisWeek')" :class="{ active: currentDateFilterState === 'thisWeek' }">This Week</button>
+              <button class="btn" @click="selectDateFilterOption('nextWeek')" :class="{ active: currentDateFilterState === 'nextWeek' }">Next Week</button>
             </div>
           </div>
         </div>
@@ -275,11 +298,18 @@ function formatMachineName(machine: string) {
           <div class="machine-name" v-html="formatMachineName(machine)"></div>
           <div class="machine-orders">
             <div
-              v-for="order in machineQueues[machine]"
+              v-for="(order, index) in machineQueues[machine]"
               :key="order.id"
               class="order-card"
               draggable="true"
             >
+            <button
+              class="remove-order-btn"
+              @click.stop="removeOrder(machine, index)"
+              title="Remove order"
+            >
+              ✕
+            </button>
               <div class="order-id">{{ order.fgMo }}</div>
               <div class="order-item">{{ order.fgItemID }}</div>
               <div class="order-date">{{ formatDateCell({ value: order.soPromiseDate }) }}</div>
@@ -290,7 +320,7 @@ function formatMachineName(machine: string) {
     </div>
 
     <div class="ag-theme-alpine">
-      <AgGridVue class="ag-grid" :theme="'legacy'" :rowData="rowData" :grid-options="gridOptions" />
+      <AgGridVue class="ag-grid" :theme="myTheme" :rowData="rowData" :grid-options="gridOptions" />
     </div>
   </div>
 </template>

@@ -1,6 +1,6 @@
 import { ref, computed } from "vue";
 
-export function useGridFilters(gridApi: any, resizeCells: () => void) {
+export function useGridFilters(gridApi: any, resizeCells: () => void, registerDropZones: () => void) {
   const currentFilterState = ref<string>("all");
   const currentDateFilterState = ref<string>("all");
 
@@ -56,16 +56,16 @@ export function useGridFilters(gridApi: any, resizeCells: () => void) {
   const jobTypeFilterButtonText = computed(() => {
     switch (currentFilterState.value) {
       case "all":
-        machinesToShow.value = ['#2', '#5', '#6', 'Cooper', '#7', 'SL #1', 'SL #2'];
+        machinesToShow.value = ["#2", "#5", "#6", "Cooper", "#7", "SL_#1", "SL_#2"];
         return "All Jobs";
       case "slitter":
-        machinesToShow.value = ['SL #1', 'SL #2'];
+        machinesToShow.value = ["SL_#1", "SL_#2"];
         return "Slitter";
       case "inspection":
-        machinesToShow.value = ['#2', '#5', '#6', 'Cooper'];
+        machinesToShow.value = ["#2", "#5", "#6", "Cooper"];
         return "Inspection";
       case "mill":
-        machinesToShow.value = ['Cooper', '#7'];
+        machinesToShow.value = ["Cooper", "#7"];
         return "Kickouts";
       default:
         return "Filter Jobs";
@@ -89,10 +89,7 @@ export function useGridFilters(gridApi: any, resizeCells: () => void) {
   function applyGridFilter() {
     const model = gridApi.value?.getFilterModel() ?? {};
 
-    const stateUpdates = [
-      jobTypeFilterModels[currentFilterState.value],
-      dateFilterModels[currentDateFilterState.value],
-    ];
+    const stateUpdates = [jobTypeFilterModels[currentFilterState.value], dateFilterModels[currentDateFilterState.value]];
 
     stateUpdates.forEach((update) => {
       Object.entries(update).forEach(([key, value]) => {
@@ -105,6 +102,9 @@ export function useGridFilters(gridApi: any, resizeCells: () => void) {
     });
 
     gridApi.value?.setFilterModel(model);
+    setTimeout(() => {
+      registerDropZones();
+    }, 0);
     resizeCells();
   }
 
@@ -141,7 +141,7 @@ export function useGridFilters(gridApi: any, resizeCells: () => void) {
     showDateDropdown.value = false;
   }
 
-const machinesToShow = ref(['#2', '#5', '#6', 'Cooper', '#7', 'SL #1', 'SL #2']);
+  const machinesToShow = ref(["#2", "#5", "#6", "Cooper", "#7", "SL #1", "SL #2"]);
 
   return {
     currentFilterState,
