@@ -265,7 +265,7 @@ textarea {
 .remove-order-btn {
   background: transparent;
   border: none;
-  color: #000000;
+  color: #fff;
   font-weight: bold;
   cursor: pointer;
   position: absolute;
@@ -279,7 +279,7 @@ textarea {
 
 .order-card {
   position: relative; /* so the remove button can be positioned inside */
-  background: #3a3a4d;
+  background: #242424;
   padding: 0.5rem;
   border-radius: 0.5rem;
   cursor: grab;
@@ -289,7 +289,7 @@ textarea {
   gap: 0.25rem;
 }
 .order-card:hover {
-  background: #4a4a5a;
+  background: #000;
 }
 .order-id {
   font-weight: bold;
