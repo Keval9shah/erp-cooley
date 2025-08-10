@@ -9,9 +9,8 @@ export function useGridFilters(gridApi: any, resizeCells: () => void, registerDr
 
   function getWeekDay(weekPosition: string, weekNumber: number): string {
     const today = new Date();
-    let dayNumber = weekPosition == "start" ? -1 : 8;
-    const day = today.getDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
-    const diff = (day === 0 ? -6 : dayNumber + weekNumber * 7) - day; // Adjust so Monday is start
+    const dayNumber = weekPosition == "start" ? -1 : 8;
+    const diff = (dayNumber + weekNumber * 7) - today.getDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
     today.setDate(today.getDate() + diff);
     return today.toISOString();
   }
