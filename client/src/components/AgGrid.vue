@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import { useGridFilters } from "../composables/useGridFilters";
-import { ref, onMounted, onUnmounted, reactive } from "vue";
+import { ref, onMounted, onUnmounted, reactive, toRaw } from "vue";
 import { AgGridVue } from "ag-grid-vue3";
 import { useCsvParser } from "../composables/useCSVParser";
+import { Splitpanes, Pane } from 'splitpanes'
+import 'splitpanes/dist/splitpanes.css'
 // @ts-ignore
 import dummyText from "../assets/dummy2.txt?raw";
 
@@ -69,20 +71,7 @@ function applyCsv() {
 
 onMounted(() => {
   document.addEventListener("click", closeDropdown);
-  
-const machineCards = document.querySelectorAll('.machine-card');
-
-machineCards.forEach(machineCard => {
-  const machineName = machineCard.querySelector('.machine-name') as HTMLElement;
-  const originalTop = machineName.offsetTop;
-  machineCard.addEventListener('scroll', () => {
-    if (machineCard.scrollTop > originalTop) {
-      machineName.classList.add('scrolled');
-    } else {
-      machineName.classList.remove('scrolled');
-    }
-  });
-});
+  scrollFunction();
 });
 onUnmounted(() => document.removeEventListener("click", closeDropdown));
 
@@ -127,16 +116,19 @@ function registerDropZones() {
   containers.forEach((container) => {
     const id = container.id;
 
-    // If already registered, remove the existing drop zone
     if (registeredDropZones[id]) {
       gridApi.value?.removeRowDropZone(registeredDropZones[id]);
     }
 
-    const dropZoneParams = {
+    const dropZoneParams: RowDropZoneParams = {
       getContainer: () => container,
       onDragStop: (dragParams: any) => {
-        const { fgMo, fgItemID, soPromiseDate } = dragParams.node.data;
-        machineQueues[container.id].push({ fgMo, fgItemID, soPromiseDate });
+        const orderData = dragParams.node.data;
+        // Add to machine
+        machineQueues[container.id].push(orderData);
+
+        // Remove from grid efficiently
+        gridApi.value?.applyTransaction({ remove: [orderData] });
       },
     };
 
@@ -173,7 +165,6 @@ const gridOptions: GridOptions = {
     enableSelectionWithoutKeys: true,
     enableClickSelection: true,
   },
-  // rowDragManaged: true,
   rowHeight: 40,
   rowDragEntireRow: true,
   rowDragText: (params) => `${params.rowNode?.data.fgMo} - ${params.rowNode?.data.fgItemID}`,
@@ -225,10 +216,11 @@ const {
   jobTypeFilterButtonText,
   dateFilterButtonText,
   machinesToShow,
-  selectFilterOption,
+  selectJobTypeFilterOption,
   selectDateFilterOption,
   cycleJobTypeFilterOptions,
-  cycleDateFilterOptions
+  cycleDateFilterOptions,
+  scrollFunction
 } = useGridFilters(gridApi, resizeCells, registerDropZones);
 
 const machineQueues = reactive<Record<string, any[]>>({
@@ -244,14 +236,17 @@ const machineQueues = reactive<Record<string, any[]>>({
 function formatMachineName(machine: string) {
   return machine.replace(/#/g, "<span class='hashtag'>#</span>").replace(/_/g, " ");
 }
+
 function removeOrder(machine: string, orderIndex: number) {
   if (machineQueues[machine]) {
-    machineQueues[machine].splice(orderIndex, 1);
+    const removedOrder = toRaw(machineQueues[machine].splice(orderIndex, 1)[0]);
+    if (removedOrder) {
+      gridApi.value?.applyTransaction({ add: [removedOrder] }); // Add back to grid efficiently
+    }
   }
 }
 
-const myTheme = themeAlpine
-    .withPart(colorSchemeDarkBlue);
+const myTheme = themeAlpine.withPart(colorSchemeDarkBlue);
 </script>
 
 <template>
@@ -267,76 +262,79 @@ const myTheme = themeAlpine
       </div>
     </div>
 
-    <!-- Machine Queues -->
-    <div class="util-group">
-      <div class="toolbar-header">
-        <div class="header">Better Jomar!</div>
-        <div class="toolbar">
-          <div><button class="btn" @click="openModal">➕ Data</button></div>
-          <!-- Job Type Filter -->
-          <div class="contextual-filter-container">
-            <div class="filter-button-group">
-              <button class="btn filter-main-btn" @click="cycleJobTypeFilterOptions">
-                {{ jobTypeFilterButtonText }}
-              </button>
-              <button class="btn filter-arrow-btn" @click.stop="showDropdown = !showDropdown">▼</button>
-            </div>
-            <div v-if="showDropdown" id="filter-dropdown-menu" class="filter-dropdown-menu">
-              <button class="btn" @click="selectFilterOption('all')" :class="{ active: currentFilterState === 'all' }">All Jobs</button>
-              <button class="btn" @click="selectFilterOption('inspection')" :class="{ active: currentFilterState === 'inspection' }">Inspection</button>
-              <button class="btn" @click="selectFilterOption('slitter')" :class="{ active: currentFilterState === 'slitter' }">Slitter</button>
-              <button class="btn" @click="selectFilterOption('mill')" :class="{ active: currentFilterState === 'mill' }">Kickouts</button>
+    <Splitpanes class="default-theme" horizontal style="height: 100vh;">
+      <!-- Machine Queues -->
+      <Pane min-size="35" max-size="70" size="45">
+        <div class="util-group">
+          <div class="toolbar-header">
+            <div class="header">Better Jomar!</div>
+            <div class="toolbar">
+              <div><button class="btn" @click="openModal">➕ Data</button></div>
+              <!-- Job Type Filter -->
+              <div class="contextual-filter-container">
+                <div class="filter-button-group">
+                  <button class="btn filter-main-btn" @click="cycleJobTypeFilterOptions">
+                    {{ jobTypeFilterButtonText }}
+                  </button>
+                  <button class="btn filter-arrow-btn" @click.stop="showDropdown = !showDropdown">▼</button>
+                </div>
+                <div v-if="showDropdown" id="filter-dropdown-menu" class="filter-dropdown-menu">
+                  <button class="btn" @click="selectJobTypeFilterOption('all')" :class="{ active: currentFilterState === 'all' }">All Jobs</button>
+                  <button class="btn" @click="selectJobTypeFilterOption('inspection')" :class="{ active: currentFilterState === 'inspection' }">Inspection</button>
+                  <button class="btn" @click="selectJobTypeFilterOption('slitter')" :class="{ active: currentFilterState === 'slitter' }">Slitter</button>
+                  <button class="btn" @click="selectJobTypeFilterOption('mill')" :class="{ active: currentFilterState === 'mill' }">Kickouts</button>
+                </div>
+              </div>
+              <!-- Date Filter -->
+              <div class="contextual-filter-container">
+                <div class="filter-button-group">
+                  <button class="btn filter-main-btn" @click="cycleDateFilterOptions">
+                    {{ dateFilterButtonText }}
+                  </button>
+                  <button class="btn filter-arrow-btn" @click.stop="showDateDropdown = !showDateDropdown">▼</button>
+                </div>
+                <div v-if="showDateDropdown" class="filter-dropdown-menu">
+                  <button class="btn" @click="selectDateFilterOption('all')" :class="{ active: currentDateFilterState === 'all' }">All Dates</button>
+                  <button class="btn" @click="selectDateFilterOption('thisWeek')" :class="{ active: currentDateFilterState === 'thisWeek' }">This Week</button>
+                  <button class="btn" @click="selectDateFilterOption('nextWeek')" :class="{ active: currentDateFilterState === 'nextWeek' }">Next Week</button>
+                </div>
+              </div>
             </div>
           </div>
-          <!-- Date Filter -->
-          <div class="contextual-filter-container">
-            <div class="filter-button-group">
-              <button class="btn filter-main-btn" @click="cycleDateFilterOptions">
-                {{ dateFilterButtonText }}
-              </button>
-              <button class="btn filter-arrow-btn" @click.stop="showDateDropdown = !showDateDropdown">▼</button>
-            </div>
-            <div v-if="showDateDropdown" class="filter-dropdown-menu">
-              <button class="btn" @click="selectDateFilterOption('all')" :class="{ active: currentDateFilterState === 'all' }">All Dates</button>
-              <button class="btn" @click="selectDateFilterOption('thisWeek')" :class="{ active: currentDateFilterState === 'thisWeek' }">This Week</button>
-              <button class="btn" @click="selectDateFilterOption('nextWeek')" :class="{ active: currentDateFilterState === 'nextWeek' }">Next Week</button>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="machines">
-        <div
-          v-for="machine in machinesToShow"
-          :key="machine"
-          class="machine-card"
-          :id="machine"
-        >
-          <div class="machine-name" v-html="formatMachineName(machine)"></div>
-          <div class="machine-orders">
+          <div class="machines">
             <div
-              v-for="(order, index) in machineQueues[machine]"
-              :key="order.id"
-              class="order-card"
-              draggable="true"
+              v-for="machine in machinesToShow"
+              :key="machine"
+              class="machine-card"
+              :id="machine"
             >
-            <button
-              class="remove-order-btn"
-              @click.stop="removeOrder(machine, index)"
-              title="Remove order"
-            >
-              ✕
-            </button>
-              <div class="order-id">{{ order.fgMo }}</div>
-              <div class="order-item">{{ order.fgItemID }}</div>
-              <div class="order-date">{{ formatDateCell({ value: order.soPromiseDate }) }}</div>
+              <div class="machine-name" v-html="formatMachineName(machine)"></div>
+              <div class="machine-orders">
+                <div
+                  v-for="(order, index) in machineQueues[machine]"
+                  :key="order.fgMo + '-' + index"
+                  class="order-card"
+                  draggable="true"
+                >
+                  <button class="remove-order-btn" @click.stop="removeOrder(machine, index)" title="Remove order"> ✕ </button>
+                  <div class="order-id">{{ order.fgMo + '&nbsp; - &nbsp;' + order.shipToCustomerName }}</div>
+                  <div class="order-item">{{ order.fabItem + '&nbsp; | &nbsp;' + order.coreSize }}</div>
+                  <div class="order-date">{{ formatDateCell({ value: order.soPromiseDate }) }}</div>
+                  <div class="order-qty">
+                    {{ order.openQty }} left of {{ order.fgReqQty }}
+                    <!-- ({{ (parseFloat(order.hrs) * parseFloat(order.openQty) / parseFloat(order.fgReqQty)).toFixed(2) }} hrs) -->
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
-      </div>
-    </div>
-
-    <div class="ag-theme-alpine">
-      <AgGridVue class="ag-grid" :theme="myTheme" :rowData="rowData" :grid-options="gridOptions" />
-    </div>
+      </Pane>
+      <Pane  max-size="65">
+        <div class="ag-theme-alpine">
+          <AgGridVue class="ag-grid" :theme="myTheme" :rowData="rowData" :grid-options="gridOptions" />
+        </div>
+      </Pane>
+    </Splitpanes>
   </div>
 </template>

@@ -85,10 +85,11 @@ export function useGridFilters(gridApi: any, resizeCells: () => void, registerDr
     }
   });
 
-  function applyGridFilter() {
+  function applyGridFilter(filterType: string) {
     const model = gridApi.value?.getFilterModel() ?? {};
 
-    const stateUpdates = [jobTypeFilterModels[currentFilterState.value], dateFilterModels[currentDateFilterState.value]];
+    // const stateUpdates = [jobTypeFilterModels[currentFilterState.value], dateFilterModels[currentDateFilterState.value]];
+    const stateUpdates = filterType === "job" ? [jobTypeFilterModels[currentFilterState.value]] : [dateFilterModels[currentDateFilterState.value]];
 
     stateUpdates.forEach((update) => {
       Object.entries(update).forEach(([key, value]) => {
@@ -103,19 +104,34 @@ export function useGridFilters(gridApi: any, resizeCells: () => void, registerDr
     gridApi.value?.setFilterModel(model);
     setTimeout(() => {
       registerDropZones();
+      scrollFunction();
     }, 0);
     resizeCells();
   }
 
-  function selectFilterOption(option: string) {
+  function scrollFunction(){
+    const machineCards = document.querySelectorAll('.machine-card');
+    machineCards.forEach(machineCard => {
+      const machineName = machineCard.querySelector('.machine-name') as HTMLElement;
+      machineCard.addEventListener('scroll', () => {
+        if (machineCard.scrollTop > machineName.offsetTop) {
+          machineName.classList.add('scrolled');
+        } else {
+          machineName.classList.remove('scrolled');
+        }
+      });
+    });
+  }
+
+  function selectJobTypeFilterOption(option: string) {
     currentFilterState.value = option;
-    applyGridFilter();
+    applyGridFilter("job");
     showDropdown.value = false;
   }
 
   function selectDateFilterOption(option: string) {
     currentDateFilterState.value = option;
-    applyGridFilter();
+    applyGridFilter("date");
     showDateDropdown.value = false;
   }
 
@@ -126,7 +142,7 @@ export function useGridFilters(gridApi: any, resizeCells: () => void, registerDr
   function cycleJobTypeFilterOptions() {
     currentJobTypeIndex = (currentJobTypeIndex + 1) % noOfToggles;
     currentFilterState.value = jobTypeFilterStates[currentJobTypeIndex];
-    applyGridFilter();
+    applyGridFilter("job");
     showDropdown.value = false;
   }
 
@@ -136,7 +152,7 @@ export function useGridFilters(gridApi: any, resizeCells: () => void, registerDr
   function cycleDateFilterOptions() {
     currentDateIndex = (currentDateIndex + 1) % dateFilterStates.length;
     currentDateFilterState.value = dateFilterStates[currentDateIndex];
-    applyGridFilter();
+    applyGridFilter("date");
     showDateDropdown.value = false;
   }
 
@@ -150,9 +166,10 @@ export function useGridFilters(gridApi: any, resizeCells: () => void, registerDr
     jobTypeFilterButtonText,
     dateFilterButtonText,
     machinesToShow,
-    selectFilterOption,
+    selectJobTypeFilterOption,
     selectDateFilterOption,
     cycleJobTypeFilterOptions,
     cycleDateFilterOptions,
+    scrollFunction
   };
 }

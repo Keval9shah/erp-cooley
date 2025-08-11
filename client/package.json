@@ -15,9 +15,11 @@
     "ag-grid-community": "^33.3.2",
     "ag-grid-enterprise": "^33.3.2",
     "ag-grid-vue3": "^33.3.2",
+    "splitpanes": "^4.0.4",
     "vue": "^3.5.13"
   },
   "devDependencies": {
+    "@types/splitpanes": "^2.2.6",
     "@vitejs/plugin-vue": "^5.2.3",
     "@vue/tsconfig": "^0.7.0",
     "gh-pages": "^6.3.0",

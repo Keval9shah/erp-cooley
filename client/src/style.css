@@ -15,7 +15,8 @@
 
 .ag-theme-alpine {
   /* text-align: left; */
-  height: calc( 100vh - 352px );
+  height: 100%;
+  /* height: calc( 100vh - 352px ); */
 }
 
 a {
@@ -199,19 +200,22 @@ textarea {
   display: flex;
   flex-direction: row;
   width: 100%;
+  height: 100%;
 }
 
 .machines {
-  height: 320px;
+  /* height: 320px; */
+  flex-grow: 1;
+  align-items: flex-start;
   background-color: #22282e;
   display: flex;
   overflow-x: auto;
   gap: 1rem;
   padding: 1rem;
-  justify-content: space-between;
+  /* justify-content: space-between; */
 }
 .machine-card {
-  flex: 1;
+  height: 100%;
   min-width: 350px;
   background-color: #151b1f;
   border-radius: 1rem;
@@ -226,10 +230,10 @@ textarea {
 .machine-name {
   padding: 0.5rem;
   position: sticky;
-  top: -10px;
+  top: -8px;
   z-index: 10;
   backdrop-filter: blur(3px);
-  -webkit-backdrop-filter: blur(3px);
+  /* -webkit-backdrop-filter: blur(3px); */
   border-bottom: 1px solid transparent;
   font-weight: bold;
   font-size: 32px;
@@ -237,11 +241,15 @@ textarea {
   font-family: fantasy;
 }
 
+.machine-card::-webkit-scrollbar {
+  display: none;
+}
+
 .machine-name.scrolled {
-  background: rgba(255, 255, 255, 0.1);
-  padding-bottom: 5px; /* Adjust this value as needed */
+  background: rgba(110, 144, 156, 0.2);
+  padding-bottom: 0px; /* Adjust this value as needed */
   font-size: 24px;       /* Adjust this value as needed */
-  transition: all 0.3s ease;
+  transition: all 0.2s ease;
   text-shadow: 1px 1px 2px rgb(0, 0, 0);
 }
 .machine-name.scrolled span {
@@ -260,7 +268,7 @@ textarea {
   padding-top: 0;
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 0.7rem;
 }
 .remove-order-btn {
   background: transparent;
@@ -279,22 +287,50 @@ textarea {
 
 .order-card {
   position: relative; /* so the remove button can be positioned inside */
-  background: #242424;
-  padding: 0.5rem;
+  background: rgba(92, 180, 200, 0.059);
+  padding: 0.9rem;
+  padding-top: 0.8rem;
   border-radius: 0.5rem;
-  cursor: grab;
-  font-size: 0.85rem;
+  /* cursor: grab; */
+  font-size: 13px;
+  font-weight: 400;
   display: flex;
   flex-direction: column;
+  color:#afafaf;
   gap: 0.25rem;
+  /* border: 1px solid #5cb4c8; */
+  border: 3px solid #343c45;
 }
 .order-card:hover {
-  background: #000;
+  background: rgba(92, 180, 200, 0.1)
 }
 .order-id {
-  font-weight: bold;
+  color: #d3e8ed;
+  font-size: 18px;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 250px;
+  display: block;
 }
-.order-item,
-.order-date {
-  opacity: 0.8;
+
+.default-theme.splitpanes--horizontal>.splitpanes__splitter, .default-theme .splitpanes--horizontal>.splitpanes__splitter {
+  background: black !important;
+  height: 9px !important;
+  border-top: none !important;
+}
+.default-theme.splitpanes--horizontal>.splitpanes__splitter:after, .default-theme .splitpanes--horizontal>.splitpanes__splitter:after {
+  height: 3px !important;
+  top: 20% !important;
+  border-radius: 3px !important;
+  width: 120px !important;
+  background: white !important;
+}
+.default-theme.splitpanes--horizontal>.splitpanes__splitter:before, .default-theme .splitpanes--horizontal>.splitpanes__splitter:before {
+  display: none !important;
+}
+
+.ag-root-wrapper {
+  border-radius: 0 !important;
 }
