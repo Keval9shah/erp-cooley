@@ -1,0 +1,16 @@
+*	Item	Item Desc.	Status	MO Status	Work Order	Promise Date	# Req.	# Reported	# Remaining	# Onhand	Planned Mach.	Shifts	Actual Mach.	Shifts	Req. Hrs	Required	Rem. Hrs	Rem. Hrs	
+	23816G	#7 70D Circular Knit Greige 50g/m² 76" or 80"	Complete	E	0000554980	2025/07/30	58	56	0	24	15	3	1	39	456	456	-1	-1	
+	23197G	#9 70Dx150D Circular Knit Greige 96g/m² 76" or 80"	In Progress	E	0000554961	2025/07/31	7	2	5	1	7	1	1	5	49	49	35	35	
+	25656G	CK012 150D Clearview Knit Greige 62g/m² 80"	In Progress	E	0000555126	2025/07/31	8	8	1	0	1	6	1	6	68	68	7	7	
+	21163G	#9 70Dx150D Circular Knit Greige 96g/m² 65"	In Progress	E	0000554786	2025/07/31	7	1	6	2	3	2	1	4	47	47	39	39	
+	22932G	#8 70D Circular Knit Greige 62g/m² 76" or 80"	In Progress	E	0000554869	2025/07/31	34	33	1	11	15	2	1	26	310	310	0	0	
+	22932G	#8 70D Circular Knit Greige 62g/m² 76" or 80"	In Progress		0000554994	2025/08/07	34	17	17	11	15	2	1	26	310	310	151	151	
+	11131G	#8 70D Circular Knit Greige 62g/m² 65"	In Progress	E	0000555093	2025/08/07	7	6	1	1	3	3	1	7	74	74	5	5	
+	11149G	Phoenix Jacquard Greige 82g/m² 80"	Complete	E	0000555217	2025/08/07	5	5	0	0	3	2	1	4	36	36	-3	-3	
+	25656G	CK012 150D Clearview Knit Greige 62g/m² 80"	Complete	E	0000555110	2025/08/07	5	5	0	0	1	4	1	4	40	40	-2	-2	
+	23816G	#7 70D Circular Knit Greige 50g/m² 76" or 80"	Complete	E	0000555172	2025/08/07	39	37	0	24	15	2	1	26	304	304	0	0	
+	22932G	#8 70D Circular Knit Greige 62g/m² 76" or 80"	Scheduled		0000555038	2025/08/14	34	0	34	11	15	2	1	26	310	310	310	310	
+	23816G	#7 70D Circular Knit Greige 50g/m² 76" or 80"	In Progress		0000555160	2025/08/20	58	35	22	24	15	3	1	39	456	456	169	169	
+	23197G	#9 70Dx150D Circular Knit Greige 96g/m² 76" or 80"	In Progress		0000554965	2025/08/21	7	2	5	1	7	1	1	5	49	49	35	35	
+	22932G	#8 70D Circular Knit Greige 62g/m² 76" or 80"	Scheduled		0000555040	2025/08/21	34	0	34	11	15	2	1	26	310	310	310	310	
+	21163G	#9 70Dx150D Circular Knit Greige 96g/m² 65"	In Progress		0000555190	2025/08/21	7	1	6	2	3	2	1	4	47	47	39	39	
