@@ -321,8 +321,8 @@ const myTheme = themeAlpine.withPart(colorSchemeDarkBlue);
                   <div class="order-item">{{ order.fabItem + '&nbsp; | &nbsp;' + order.coreSize }}</div>
                   <div class="order-date">{{ formatDateCell({ value: order.soPromiseDate }) }}</div>
                   <div class="order-qty">
-                    {{ order.openQty }} left of {{ order.fgReqQty }}
-                    <!-- ({{ (parseFloat(order.hrs) * parseFloat(order.openQty) / parseFloat(order.fgReqQty)).toFixed(2) }} hrs) -->
+                    {{ order.aGradeCompleted }} / {{ order.fgReqQty }}
+                    ({{ (parseFloat(order.hrs) * parseFloat(order.openQty) / parseFloat(order.fgReqQty)).toFixed(2) }} hrs)
                   </div>
                 </div>
               </div>
