@@ -29,10 +29,18 @@ async function getInspectionJobs() {
   return data;
 }
 
-async function insertMachineQueue(job:any, machineName: string) {
+// function debounce<F extends (...args: any[]) => void>(func: F, wait: number) {
+//   let timeout: NodeJS.Timeout;
+//   return (...args: Parameters<F>) => {
+//     clearTimeout(timeout);
+//     timeout = setTimeout(() => func(...args), wait);
+//   };
+// }
+
+async function insertMachineQueue(job_id:any, machine_name: string) {
   const { error } = await supabase.from("machine_queue").upsert({
-    job_id: job.order_id,
-    machine_name: machineName,
+    job_id,
+    machine_name,
   });
 
   if (error) {
@@ -40,10 +48,10 @@ async function insertMachineQueue(job:any, machineName: string) {
   }
 }
 
-async function removeMachineQueue(job:any, machineName: string) {
+async function removeMachineQueue(job_id:any, machine_name: string) {
   const { error } = await supabase.from("machine_queue").delete().match({
-    job_id: job.order_id,
-    machine_name: machineName,
+    job_id,
+    machine_name,
   });
 
   if (error) {

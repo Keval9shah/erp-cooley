@@ -27,7 +27,7 @@ const columnDefs: ColDef[] = [
   { headerName: "FG Panel Items", field: "fgPanelItems", width: 135 },
   { headerName: "FG MO", field: "fgMo" },
   { headerName: "Fab Item", field: "fabItem" },
-  { headerName: "Ship To Customer", field: "shipToCustomerName" },
+  { headerName: "Customer", field: "shipToCustomerName" },
   { headerName: "Core Size", field: "coreSize" },
   { headerName: "A Grade Completed", field: "aGradeCompleted", valueFormatter: insertComma },
   { headerName: "FG Req Qty", field: "fgReqQty", valueFormatter: insertComma },
@@ -137,7 +137,7 @@ function registerDropZones() {
         const orderData = dragParams.node.data;
         // Add to machine
         machineQueues[container.id].push(orderData);
-        await insertMachineQueue(orderData, container.id);
+        await insertMachineQueue(orderData.order_id, container.id);
 
         // Remove from grid efficiently
         gridApi.value?.applyTransaction({ remove: [{ order_id: orderData.order_id }] });
@@ -167,6 +167,7 @@ const gridOptions: GridOptions = {
     floatingFilter: true,
     sortable: true,
     resizable: true,
+    lockPosition: true,
     minWidth: 80,
   },
   tooltipShowDelay: 0,
@@ -240,7 +241,7 @@ function formatMachineName(machine: string) {
 async function removeOrder(machine: string, orderIndex: number) {
   if (machineQueues[machine]) {
     const removedOrder = toRaw(machineQueues[machine].splice(orderIndex, 1)[0]);
-    await removeMachineQueue(removedOrder, machine);
+    await removeMachineQueue(removedOrder.order_id, machine);
     if (removedOrder) {
       gridApi.value?.applyTransaction({ add: [removedOrder] }); // Add back to grid efficiently
     }
