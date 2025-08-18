@@ -3,9 +3,9 @@ import { useGridFilters } from "../composables/useGridFilters";
 import { ref, onMounted, onUnmounted, reactive, toRaw } from "vue";
 import { AgGridVue } from "ag-grid-vue3";
 import { useCsvParser } from "../composables/useCSVParser";
-import { Splitpanes, Pane } from 'splitpanes'
-import 'splitpanes/dist/splitpanes.css'
-import { getInspectionJobs, insertMachineQueue, removeMachineQueue, getMachineQueue } from '../supabase';
+import { Splitpanes, Pane } from "splitpanes";
+import "splitpanes/dist/splitpanes.css";
+import { getInspectionJobs, insertMachineQueue, removeMachineQueue, getMachineQueue } from "../supabase";
 
 import { themeAlpine, ModuleRegistry, AllCommunityModule, colorSchemeDarkBlue } from "ag-grid-community";
 import type { GridApi, GridOptions, ColDef, RowStyle, RowDropZoneParams } from "ag-grid-community";
@@ -56,20 +56,37 @@ const columnDefsWithTooltips = columnDefs.map((col) => ({
   headerTooltip: col.headerName,
 }));
 
-function openModal() {showModal.value = true;}
-function closeModal() {showModal.value = false;}
-function applyCsv() {
-  parseCsv(rawCsv.value);
+function openModal() {
+  showModal.value = true;
+}
+function closeModal() {
+  showModal.value = false;
+}
+async function applyCsv() {
+  await parseCsv(rawCsv.value);
   resizeCells();
   rawCsv.value = "";
   showModal.value = false;
+  (await getMachineQueue()).forEach((item) => {
+    const queue = machineQueues[item.machine_name];
+    const newJob = item.inspection_jobs;
+    console.log(queue, (newJob as any).aGradeCompleted);
+    const existingIndex = queue.findIndex((job: any) => job.order_id === (newJob as any).order_id);
+
+    if (existingIndex !== -1) {
+      queue[existingIndex] = newJob;
+    } else {
+      queue.push(newJob);
+    }
+    gridApi.value?.applyTransaction({ remove: [{ order_id: (item.inspection_jobs as any).order_id }] });
+  });
 }
-  
+
 const machineQueues = reactive<Record<string, any[]>>({
   "#2": [],
   "#5": [],
   "#6": [],
-  "Cooper": [],
+  Cooper: [],
   "#7": [],
   "SL_#1": [],
   "SL_#2": [],
@@ -77,7 +94,7 @@ const machineQueues = reactive<Record<string, any[]>>({
 
 onMounted(async () => {
   Data.value = await getInspectionJobs();
-  (await getMachineQueue()).forEach(item => {
+  (await getMachineQueue()).forEach((item) => {
     machineQueues[item.machine_name].push(item.inspection_jobs);
     gridApi.value?.applyTransaction({ remove: [{ order_id: (item.inspection_jobs as any).order_id }] });
   });
@@ -219,20 +236,7 @@ const gridOptions: GridOptions = {
   },
 };
 
-const {
-  currentFilterState,
-  currentDateFilterState,
-  showDropdown,
-  showDateDropdown,
-  jobTypeFilterButtonText,
-  dateFilterButtonText,
-  machinesToShow,
-  selectJobTypeFilterOption,
-  selectDateFilterOption,
-  cycleJobTypeFilterOptions,
-  cycleDateFilterOptions,
-  scrollFunction
-} = useGridFilters(gridApi, resizeCells, registerDropZones);
+const { currentFilterState, currentDateFilterState, showDropdown, showDateDropdown, jobTypeFilterButtonText, dateFilterButtonText, machinesToShow, selectJobTypeFilterOption, selectDateFilterOption, cycleJobTypeFilterOptions, cycleDateFilterOptions, scrollFunction } = useGridFilters(gridApi, resizeCells, registerDropZones);
 
 function formatMachineName(machine: string) {
   return machine.replace(/#/g, "<span class='hashtag'>#</span>").replace(/_/g, " ");
@@ -264,7 +268,7 @@ const myTheme = themeAlpine.withPart(colorSchemeDarkBlue);
       </div>
     </div>
 
-    <Splitpanes class="default-theme" horizontal style="height: 100vh;">
+    <Splitpanes class="default-theme" horizontal style="height: 100vh">
       <!-- Machine Queues -->
       <Pane min-size="35" max-size="70" size="45">
         <div class="util-group">
@@ -304,44 +308,27 @@ const myTheme = themeAlpine.withPart(colorSchemeDarkBlue);
             </div>
           </div>
           <div class="machines">
-            <div
-              v-for="machine in machinesToShow"
-              :key="machine"
-              class="machine-card"
-              :id="machine"
-            >
+            <div v-for="machine in machinesToShow" :key="machine" class="machine-card" :id="machine">
               <div class="machine-name" v-html="formatMachineName(machine)"></div>
               <div class="machine-orders">
-                <div
-                  v-for="(order, index) in machineQueues[machine]"
-                  :key="order.fgMo + '-' + index"
-                  class="order-card"
-                  draggable="true"
-                >
-                  <button class="remove-order-btn" @click.stop="removeOrder(machine, index)" title="Remove order"> ✕ </button>
+                <div v-for="(order, index) in machineQueues[machine]" :key="order.fgMo + '-' + index" class="order-card" draggable="true">
+                  <button class="remove-order-btn" @click.stop="removeOrder(machine, index)" title="Remove order">✕</button>
                   <template v-if="order.shipToCustomerName">
-                    <div class="order-id">
-                      {{ order.fgMo }} - {{ order.shipToCustomerName }}
-                    </div>
-                    <div class="order-item">
-                      {{ order.fabItem }} | {{ order.coreSize }}
-                    </div>
+                    <div class="order-id">{{ order.fgMo }} - {{ order.shipToCustomerName }}</div>
+                    <div class="order-item">{{ order.fabItem }} | {{ order.coreSize }}</div>
                   </template>
                   <template v-else>
                     <div class="order-id">{{ order.fgMo }} - {{ order.fabItem }}</div>
                   </template>
                   <div class="order-date">{{ formatDateCell({ value: order.soPromiseDate }) }}</div>
-                  <div class="order-qty">
-                    {{ order.aGradeCompleted }} / {{ order.fgReqQty }}
-                    ({{ (parseFloat(order.hrs) * parseFloat(order.openQty) / parseFloat(order.fgReqQty)).toFixed(2) }} hrs)
-                  </div>
+                  <div class="order-qty">{{ order.aGradeCompleted }} / {{ order.fgReqQty }} ({{ ((parseFloat(order.hrs) * parseFloat(order.openQty)) / parseFloat(order.fgReqQty)).toFixed(2) }} hrs)</div>
                 </div>
               </div>
             </div>
           </div>
         </div>
       </Pane>
-      <Pane  max-size="65">
+      <Pane max-size="65">
         <div class="ag-theme-alpine">
           <AgGridVue class="ag-grid" :theme="myTheme" :rowData="Data" :grid-options="gridOptions" />
         </div>
