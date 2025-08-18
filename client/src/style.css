@@ -30,7 +30,7 @@ a:hover {
 }
 
 .ag-grid-tab {
-    text-align: left !important;
+  text-align: left !important;
 }
 
 body {
@@ -88,9 +88,9 @@ button.btn:focus-visible {
 }
 
 .ag-theme-params-1 {
-    margin-top: -10px;
-    margin-left: -8px;
-  }
+  margin-top: -10px;
+  margin-left: -8px;
+}
 .ag-floating-filter-button-button {
   margin: 0 4px;
 }
@@ -252,7 +252,7 @@ textarea {
 .machine-name.scrolled {
   background: rgba(110, 144, 156, 0.2);
   padding-bottom: 0px; /* Adjust this value as needed */
-  font-size: 24px;       /* Adjust this value as needed */
+  font-size: 24px; /* Adjust this value as needed */
   transition: all 0.2s ease;
   text-shadow: 1px 1px 2px rgb(0, 0, 0);
 }
@@ -300,13 +300,13 @@ textarea {
   font-weight: 400;
   display: flex;
   flex-direction: column;
-  color:#afafaf;
+  color: #afafaf;
   gap: 0.25rem;
   /* border: 1px solid #5cb4c8; */
   border: 3px solid #343c45;
 }
 .order-card:hover {
-  background: rgba(92, 180, 200, 0.1)
+  background: rgba(92, 180, 200, 0.1);
 }
 .order-id {
   color: #d3e8ed;
@@ -319,16 +319,27 @@ textarea {
   display: block;
 }
 
-.default-theme.splitpanes--horizontal>.splitpanes__splitter, .default-theme .splitpanes--horizontal>.splitpanes__splitter {
+.default-theme.splitpanes--horizontal > .splitpanes__splitter,
+.default-theme .splitpanes--horizontal > .splitpanes__splitter {
   background: rgba(59, 59, 59, 0.571) !important;
   height: 7px !important;
   border-top: none !important;
 }
-.default-theme.splitpanes--horizontal>.splitpanes__splitter:after, .default-theme .splitpanes--horizontal>.splitpanes__splitter:after, 
-.default-theme.splitpanes--horizontal>.splitpanes__splitter:before, .default-theme .splitpanes--horizontal>.splitpanes__splitter:before {
+.default-theme.splitpanes--horizontal > .splitpanes__splitter:after,
+.default-theme .splitpanes--horizontal > .splitpanes__splitter:after,
+.default-theme.splitpanes--horizontal > .splitpanes__splitter:before,
+.default-theme .splitpanes--horizontal > .splitpanes__splitter:before {
   display: none !important;
 }
 
 .ag-root-wrapper {
   border-radius: 0 !important;
+}
+.ag-theme-params-1 {
+  margin-top: -10px;
+  margin-left: -8px;
+}
+.ag-theme-alpine {
+  margin-top: 10px;
+  margin-left: 8px;
 }

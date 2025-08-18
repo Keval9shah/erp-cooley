@@ -5,32 +5,34 @@ import { AgGridVue } from "ag-grid-vue3";
 import { useCsvParser } from "../composables/useCSVParser";
 import { Splitpanes, Pane } from 'splitpanes'
 import 'splitpanes/dist/splitpanes.css'
-// @ts-ignore
-import dummyText from "../assets/dummy2.txt?raw";
+import { getInspectionJobs, insertMachineQueue, removeMachineQueue, getMachineQueue } from '../supabase';
 
 import { themeAlpine, ModuleRegistry, AllCommunityModule, colorSchemeDarkBlue } from "ag-grid-community";
 import type { GridApi, GridOptions, ColDef, RowStyle, RowDropZoneParams } from "ag-grid-community";
 ModuleRegistry.registerModules([AllCommunityModule]);
 
-const { rowData, parseCsv } = useCsvParser();
+const { Data, parseCsv } = useCsvParser();
 const rawCsv = ref("");
 const showModal = ref(false);
 
 const gridApi = ref<GridApi | null>(null);
 
+function insertComma(params: any) {
+  return params.value != null ? params.value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "";
+}
 const columnDefs: ColDef[] = [
   { headerName: "MO Status", field: "moStatus" },
-  { headerName: "SO Promise Date", field: "soPromiseDate", valueFormatter: formatDateCell, filter: "agDateColumnFilter" },
-  { headerName: "Fab to Inspect/Unassign", field: "fabToInspectUnassign", valueGetter: (params) => parseFloat((params.data.fabToInspectUnassign || "0").replace(/,/g, "")), valueFormatter: (params) => (params.value != null ? params.value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "") },
+  { headerName: "SO Promise Date", field: "soPromiseDate", valueGetter: (params) => (params.data.soPromiseDate ? new Date(params.data.soPromiseDate) : null), valueFormatter: formatDateCell, filter: "agDateColumnFilter" },
+  { headerName: "Fab to Inspect/Unassign", field: "fabToInspectUnassign", valueFormatter: insertComma },
   { headerName: "FG Panel Items", field: "fgPanelItems", width: 135 },
   { headerName: "FG MO", field: "fgMo" },
   { headerName: "Fab Item", field: "fabItem" },
   { headerName: "Ship To Customer", field: "shipToCustomerName" },
   { headerName: "Core Size", field: "coreSize" },
-  { headerName: "A Grade Completed", field: "aGradeCompleted" },
-  { headerName: "FG Req Qty", field: "fgReqQty" },
-  { headerName: "Fab Metres Prod.", field: "fabMetresProd" },
-  { headerName: "Available Master Qty", field: "availableMasterQty" },
+  { headerName: "A Grade Completed", field: "aGradeCompleted", valueFormatter: insertComma },
+  { headerName: "FG Req Qty", field: "fgReqQty", valueFormatter: insertComma },
+  { headerName: "Fab Metres Prod.", field: "fabMetresProd", valueFormatter: insertComma },
+  { headerName: "Available Master Qty", field: "availableMasterQty", valueFormatter: insertComma },
   { headerName: "Fab MO", field: "fabMo" },
   { headerName: "Target Roll Len", field: "targetRollLen" },
   { headerName: "Hrs", field: "hrs" },
@@ -43,8 +45,8 @@ const columnDefs: ColDef[] = [
   { headerName: "Destination", field: "dest" },
   //   { headerName: 'Scheduled Machine', field: 'scheduledMachine' },
   { headerName: "Activity", field: "activity" },
-  { headerName: "Open Qty", field: "openQty" },
-  { headerName: "MO Promise Date", field: "moPromiseDate", valueFormatter: formatDateCell, filter: "agDateColumnFilter" },
+  { headerName: "Open Qty", field: "openQty", valueFormatter: insertComma },
+  { headerName: "MO Promise Date", field: "moPromiseDate", valueGetter: (params) => (params.data.moPromiseDate ? new Date(params.data.moPromiseDate) : null), valueFormatter: formatDateCell, filter: "agDateColumnFilter" },
   { headerName: "Ship To Customer", field: "shipToCustomer" },
   { headerName: "FG Item ID", field: "fgItemID" },
 ];
@@ -54,22 +56,31 @@ const columnDefsWithTooltips = columnDefs.map((col) => ({
   headerTooltip: col.headerName,
 }));
 
-parseCsv(dummyText);
-
-function openModal() {
-  showModal.value = true;
-}
-function closeModal() {
-  showModal.value = false;
-}
+function openModal() {showModal.value = true;}
+function closeModal() {showModal.value = false;}
 function applyCsv() {
   parseCsv(rawCsv.value);
   resizeCells();
   rawCsv.value = "";
   showModal.value = false;
 }
+  
+const machineQueues = reactive<Record<string, any[]>>({
+  "#2": [],
+  "#5": [],
+  "#6": [],
+  "Cooper": [],
+  "#7": [],
+  "SL_#1": [],
+  "SL_#2": [],
+});
 
-onMounted(() => {
+onMounted(async () => {
+  Data.value = await getInspectionJobs();
+  (await getMachineQueue()).forEach(item => {
+    machineQueues[item.machine_name].push(item.inspection_jobs);
+    gridApi.value?.applyTransaction({ remove: [{ order_id: (item.inspection_jobs as any).order_id }] });
+  });
   document.addEventListener("click", closeDropdown);
   scrollFunction();
 });
@@ -122,13 +133,14 @@ function registerDropZones() {
 
     const dropZoneParams: RowDropZoneParams = {
       getContainer: () => container,
-      onDragStop: (dragParams: any) => {
+      onDragStop: async (dragParams: any) => {
         const orderData = dragParams.node.data;
         // Add to machine
         machineQueues[container.id].push(orderData);
+        await insertMachineQueue(orderData, container.id);
 
         // Remove from grid efficiently
-        gridApi.value?.applyTransaction({ remove: [orderData] });
+        gridApi.value?.applyTransaction({ remove: [{ order_id: orderData.order_id }] });
       },
     };
 
@@ -149,6 +161,7 @@ function getNumberOfPanels(fgPanelItems: string): number {
 
 const gridOptions: GridOptions = {
   columnDefs: columnDefsWithTooltips,
+  getRowId: (params) => params.data.order_id,
   defaultColDef: {
     filter: "agTextColumnFilter",
     floatingFilter: true,
@@ -190,18 +203,15 @@ const gridOptions: GridOptions = {
   onFirstDataRendered: resizeCells,
   getRowStyle: (params) => {
     const data = params.data;
-    const fabToInspect = parseInt(data.fabToInspectUnassign.replace(/,/g, "")) || 0;
-    const master = parseInt(data.availableMasterQty.replace(/,/g, "")) || 0;
-    const aGradeComp = parseInt(data.aGradeCompleted.replace(/,/g, "")) || 0;
-    const req = parseInt(data.fgReqQty.replace(/,/g, "")) || 0;
+    const req = data.fgReqQty;
 
     const noOfPanels = getNumberOfPanels(data.fgPanelItems);
     if (req === 0) return {};
 
-    const calculatedValueForRatio = (fabToInspect + master) * noOfPanels;
-    const ratio = (calculatedValueForRatio * 100) / (req - aGradeComp);
+    const calculatedValueForRatio = (data.fabToInspectUnassign + data.availableMasterQty) * noOfPanels;
+    const ratio = (calculatedValueForRatio * 100) / (req - data.aGradeCompleted);
 
-    if (ratio < 20 && req > aGradeComp) {
+    if (ratio < 20 && req > data.aGradeCompleted) {
       return { backgroundColor: "#1a1a1a" };
     }
     return {} as RowStyle;
@@ -223,23 +233,14 @@ const {
   scrollFunction
 } = useGridFilters(gridApi, resizeCells, registerDropZones);
 
-const machineQueues = reactive<Record<string, any[]>>({
-  "#2": [],
-  "#5": [],
-  "#6": [],
-  "Cooper": [],
-  "#7": [],
-  "SL_#1": [],
-  "SL_#2": [],
-});
-
 function formatMachineName(machine: string) {
   return machine.replace(/#/g, "<span class='hashtag'>#</span>").replace(/_/g, " ");
 }
 
-function removeOrder(machine: string, orderIndex: number) {
+async function removeOrder(machine: string, orderIndex: number) {
   if (machineQueues[machine]) {
     const removedOrder = toRaw(machineQueues[machine].splice(orderIndex, 1)[0]);
+    await removeMachineQueue(removedOrder, machine);
     if (removedOrder) {
       gridApi.value?.applyTransaction({ add: [removedOrder] }); // Add back to grid efficiently
     }
@@ -317,8 +318,17 @@ const myTheme = themeAlpine.withPart(colorSchemeDarkBlue);
                   draggable="true"
                 >
                   <button class="remove-order-btn" @click.stop="removeOrder(machine, index)" title="Remove order"> ✕ </button>
-                  <div class="order-id">{{ order.fgMo + '&nbsp; - &nbsp;' + order.shipToCustomerName }}</div>
-                  <div class="order-item">{{ order.fabItem + '&nbsp; | &nbsp;' + order.coreSize }}</div>
+                  <template v-if="order.shipToCustomerName">
+                    <div class="order-id">
+                      {{ order.fgMo }} - {{ order.shipToCustomerName }}
+                    </div>
+                    <div class="order-item">
+                      {{ order.fabItem }} | {{ order.coreSize }}
+                    </div>
+                  </template>
+                  <template v-else>
+                    <div class="order-id">{{ order.fgMo }} - {{ order.fabItem }}</div>
+                  </template>
                   <div class="order-date">{{ formatDateCell({ value: order.soPromiseDate }) }}</div>
                   <div class="order-qty">
                     {{ order.aGradeCompleted }} / {{ order.fgReqQty }}
@@ -332,7 +342,7 @@ const myTheme = themeAlpine.withPart(colorSchemeDarkBlue);
       </Pane>
       <Pane  max-size="65">
         <div class="ag-theme-alpine">
-          <AgGridVue class="ag-grid" :theme="myTheme" :rowData="rowData" :grid-options="gridOptions" />
+          <AgGridVue class="ag-grid" :theme="myTheme" :rowData="Data" :grid-options="gridOptions" />
         </div>
       </Pane>
     </Splitpanes>

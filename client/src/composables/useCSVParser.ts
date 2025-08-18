@@ -1,4 +1,5 @@
 import { ref } from "vue";
+import { syncInspectionJobs, getInspectionJobs } from '../supabase';
 
 export function useCsvParser() {
   // prettier-ignore
@@ -44,25 +45,41 @@ export function useCsvParser() {
     "scheduleCompleteDate"
   ]
   
-  const rowData = ref<any[]>([]);
+  const Data = ref<any[]>([]);
   
   function convertFields(data: any[]) {
+    const convertToFloat = (val: any) => (val ? parseFloat(val.replace(/,/g, "")) : 0);
+    const convertToInt = (val: any) => (val ? parseInt(val.replace(/,/g, ""), 10) : 0);
+    const convertToDate = (val: any) => (val ? new Date(val) : null);
     return data.map((row) => {
       // Cleaning rules for specific fields
-      const cleanRules: Record<string, ((val: any) => string | Date)[]> = {
+      const cleanRules: Record<string, ((val: any) => any)[]> = {
         fgMo: [(val) => val.replace(/^0+/, "")],
         fabMo: [(val) => val.replace(/^0+/, ""), (val) => val.replace(/^USE\s+/, "")],
         coreSize: [(val) => val.replace(/CR/g, "")],
-        moPromiseDate: [(val) => (val ? new Date(val) : "")],
-        soPromiseDate: [(val) => (val ? new Date(val) : "")],
-        scheduleCompleteDate: [(val) => (val ? new Date(val) : "")],
+        fabMetresProd: [convertToFloat],
+        rollsToPack: [convertToInt],
+        rollsToTransfer: [convertToInt],
+        skidsLeftToTransfer: [convertToInt],
+        fabToInspectUnassign: [convertToFloat],
+        aGradeCompleted: [convertToFloat],
+        fgReqQty: [convertToFloat],
+        openQty: [convertToFloat],
+        availableMasterQty: [convertToFloat],
+        hrs: [convertToFloat],
+        days: [convertToInt],
+        targetRollLen: [convertToFloat],
+        moPromiseDate: [convertToDate],
+        numOfAframes: [convertToInt],
+        soPromiseDate: [convertToDate],
+        scheduleCompleteDate: [convertToDate],
         assignedMachine: [
           (val) => {
             const scheduled = row.scheduledMachine;
             return val === scheduled || !scheduled ? val : `${val} (${scheduled})`;
           },
         ],
-        extrusionCompleted: [(val) => (val === "true" ? "🟢" : "🔴")],
+        extrusionCompleted: [(val) => (val === "true" ? true : false)],
         shipToCustomerName: [
           (val) =>
             val
@@ -73,11 +90,9 @@ export function useCsvParser() {
       };
 
       Object.keys(cleanRules).forEach((key) => {
-        if (row[key]?.length > 0) {
-          cleanRules[key].forEach((rule) => {
-            row[key] = rule(row[key]);
-          });
-        }
+        cleanRules[key].forEach((rule) => {
+          row[key] = rule(row[key]);
+        });
       });
 
       return {
@@ -86,7 +101,7 @@ export function useCsvParser() {
     });
   }
 
-  function parseCsv(csv: string) {
+  async function parseCsv(csv: string) {
     const lines = csv.trim().split("\n");
     if (lines.length > 0 && lines[0].startsWith("*") && lines[0].includes("FG MO")) {
       lines.shift();
@@ -98,11 +113,14 @@ export function useCsvParser() {
         return acc;
       }, {} as Record<string, string>);
     });
-    rowData.value = convertFields(parsed);
+    const isSuccess = await syncInspectionJobs(convertFields(parsed));
+    if (isSuccess) {
+      Data.value = await getInspectionJobs();
+    }
   }
 
   return {
-    rowData,
+    Data,
     parseCsv,
   };
 }
