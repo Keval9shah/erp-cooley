@@ -22,7 +22,7 @@ function insertComma(params: any) {
 }
 const columnDefs: ColDef[] = [
   { headerName: "MO Status", field: "moStatus" },
-  { headerName: "SO Promise Date", field: "soPromiseDate", valueGetter: (params) => (params.data.soPromiseDate ? new Date(params.data.soPromiseDate) : null), valueFormatter: formatDateCell, filter: "agDateColumnFilter" },
+  { headerName: "SO Promise Date", field: "soPromiseDate", valueGetter: (params) => (params.data.soPromiseDate ? new Date(params.data.soPromiseDate+"T00:00") : null), valueFormatter: formatDateCell, filter: "agDateColumnFilter" },
   { headerName: "Fab to Inspect/Unassign", field: "fabToInspectUnassign", valueFormatter: insertComma },
   { headerName: "FG Panel Items", field: "fgPanelItems", width: 135 },
   { headerName: "FG MO", field: "fgMo" },
@@ -70,7 +70,6 @@ async function applyCsv() {
   (await getMachineQueue()).forEach((item) => {
     const queue = machineQueues[item.machine_name];
     const newJob = item.inspection_jobs;
-    console.log(queue, (newJob as any).aGradeCompleted);
     const existingIndex = queue.findIndex((job: any) => job.order_id === (newJob as any).order_id);
 
     if (existingIndex !== -1) {
@@ -112,16 +111,15 @@ function closeDropdown(event: MouseEvent) {
   }
 }
 
-function formatDateCell(params: any) {
+function formatDateCell(params: any, appendStr = "") {
   const raw = params.value;
   if (!raw) return "";
-  const date = new Date(raw);
+  const date = new Date(raw + appendStr);
   if (isNaN(date.getTime())) return raw;
 
   const day = date.getDate().toString().padStart(2, "0");
   const month = (date.getMonth() + 1).toString().padStart(2, "0");
   const weekday = new Intl.DateTimeFormat("en-US", { weekday: "short" }).format(date);
-
   return `${day}/${month} - ${weekday}`;
 }
 
@@ -320,7 +318,7 @@ const myTheme = themeAlpine.withPart(colorSchemeDarkBlue);
                   <template v-else>
                     <div class="order-id">{{ order.fgMo }} - {{ order.fabItem }}</div>
                   </template>
-                  <div class="order-date">{{ formatDateCell({ value: order.soPromiseDate }) }}</div>
+                  <div class="order-date">{{ formatDateCell({ value: order.soPromiseDate }, "T00:00") }}</div>
                   <div class="order-qty">{{ order.aGradeCompleted }} / {{ order.fgReqQty }} ({{ ((parseFloat(order.hrs) * parseFloat(order.openQty)) / parseFloat(order.fgReqQty)).toFixed(2) }} hrs)</div>
                 </div>
               </div>
