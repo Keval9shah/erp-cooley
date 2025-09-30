@@ -216,6 +216,7 @@ textarea {
   overflow-x: auto;
   gap: 1rem;
   padding: 1rem;
+  flex-wrap: wrap;
   /* justify-content: space-between; */
 }
 .machine-card {
