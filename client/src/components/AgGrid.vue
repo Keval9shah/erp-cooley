@@ -271,7 +271,7 @@ const myTheme = themeAlpine.withPart(colorSchemeDarkBlue);
       <Pane min-size="35" max-size="70" size="45">
         <div class="util-group">
           <div class="toolbar-header">
-            <div class="header">Better Jomar!</div>
+            <button class="btn">🧵 Textile</button>
             <div class="toolbar">
               <div><button class="btn" @click="openModal">➕ Data</button></div>
               <!-- Job Type Filter -->
@@ -309,7 +309,7 @@ const myTheme = themeAlpine.withPart(colorSchemeDarkBlue);
             <div v-for="machine in machinesToShow" :key="machine" class="machine-card" :id="machine">
               <div class="machine-name" v-html="formatMachineName(machine)"></div>
               <div class="machine-orders">
-                <div v-for="(order, index) in machineQueues[machine]" :key="order.fgMo + '-' + index" class="order-card" draggable="true">
+                <div v-for="(order, index) in machineQueues[machine]" :key="order.fgMo + '-' + index" :class="order.moStatus === 'Closed' ? 'order-card bg-red' : 'order-card'" draggable="true">
                   <button class="remove-order-btn" @click.stop="removeOrder(machine, index)" title="Remove order">✕</button>
                   <template v-if="order.shipToCustomerName">
                     <div class="order-id">{{ order.fgMo }} - {{ order.shipToCustomerName }}</div>

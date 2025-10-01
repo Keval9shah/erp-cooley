@@ -68,10 +68,18 @@ h1 {
   margin-bottom: 10px;
 }
 
+.bg-red {
+  background-color: rgba(255, 0, 0, 0.1) !important;
+  border: 3px solid #640000 !important;
+}
+.bg-red .remove-order-btn {
+  color: #ff6666 !important;
+}
+
 button.btn {
   border-radius: 7px;
   border: 1px solid transparent;
-  padding: 0.5em 0.8em;
+  padding: 7px 16px 9px 16px;
   font-size: 1em;
   font-weight: 500;
   font-family: inherit;
@@ -220,7 +228,7 @@ textarea {
   /* justify-content: space-between; */
 }
 .machine-card {
-  height: 100%;
+  height: 97%;
   min-width: 350px;
   background-color: #151b1f;
   border-radius: 1rem;
