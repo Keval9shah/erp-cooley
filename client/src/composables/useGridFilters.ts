@@ -4,9 +4,6 @@ export function useGridFilters(gridApi: any, resizeCells: () => void, registerDr
   const currentFilterState = ref<string>("all");
   const currentDateFilterState = ref<string>("all");
 
-  const showDropdown = ref(false);
-  const showDateDropdown = ref(false);
-
   function getWeekDay(weekPosition: string, weekNumber: number): string {
     const today = new Date();
     const dayNumber = weekPosition == "start" ? -1 : 8;
@@ -123,18 +120,6 @@ export function useGridFilters(gridApi: any, resizeCells: () => void, registerDr
     });
   }
 
-  function selectJobTypeFilterOption(option: string) {
-    currentFilterState.value = option;
-    applyGridFilter("job");
-    showDropdown.value = false;
-  }
-
-  function selectDateFilterOption(option: string) {
-    currentDateFilterState.value = option;
-    applyGridFilter("date");
-    showDateDropdown.value = false;
-  }
-
   let currentJobTypeIndex = 0;
   const noOfToggles = 3;
   let jobTypeFilterStates: string[] = ["all", "inspection", "slitter", "mill"];
@@ -143,7 +128,6 @@ export function useGridFilters(gridApi: any, resizeCells: () => void, registerDr
     currentJobTypeIndex = (currentJobTypeIndex + 1) % noOfToggles;
     currentFilterState.value = jobTypeFilterStates[currentJobTypeIndex];
     applyGridFilter("job");
-    showDropdown.value = false;
   }
 
   let currentDateIndex = 0;
@@ -153,21 +137,14 @@ export function useGridFilters(gridApi: any, resizeCells: () => void, registerDr
     currentDateIndex = (currentDateIndex + 1) % dateFilterStates.length;
     currentDateFilterState.value = dateFilterStates[currentDateIndex];
     applyGridFilter("date");
-    showDateDropdown.value = false;
   }
 
   const machinesToShow = ref(["#2", "#5", "#6", "Cooper", "#7", "SL #1", "SL #2"]);
 
   return {
-    currentFilterState,
-    currentDateFilterState,
-    showDropdown,
-    showDateDropdown,
     jobTypeFilterButtonText,
     dateFilterButtonText,
     machinesToShow,
-    selectJobTypeFilterOption,
-    selectDateFilterOption,
     cycleJobTypeFilterOptions,
     cycleDateFilterOptions,
     scrollFunction

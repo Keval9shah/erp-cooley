@@ -55,7 +55,6 @@ export function useCsvParser() {
       // Cleaning rules for specific fields
       const cleanRules: Record<string, ((val: any) => any)[]> = {
         fgMo: [(val) => val.replace(/^0+/, "")],
-        fabMo: [(val) => val.replace(/^0+/, ""), (val) => val.replace(/^USE\s+/, "")],
         coreSize: [(val) => val.replace(/CR/g, "")],
         fabMetresProd: [convertToFloat],
         rollsToPack: [convertToInt],

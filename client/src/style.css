@@ -44,6 +44,11 @@ h1 {
   line-height: 1.1;
 }
 
+.toolbar {
+  display: flex;
+  flex-direction: column;
+}
+
 .toolbar-header {
   border-right: 1px solid #ccc;
   min-width: fit-content;
@@ -65,6 +70,8 @@ h1 {
 }
 
 .toolbar > * {
+  text-align: left;
+  width: fit-content;
   margin-bottom: 10px;
 }
 
@@ -74,6 +81,28 @@ h1 {
 }
 .bg-red .remove-order-btn {
   color: #ff6666 !important;
+}
+
+.low-ratio {
+  color: #ff6666 !important;
+  font-weight: 600;
+  background-color: black !important;
+}
+
+.btn.textile.desktop {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 0px 16px 8px 20px;
+}
+
+.btn.textile.mobile {
+  display: none;
+}
+
+.btn.textile span {
+  font-size: 1.8em;
 }
 
 button.btn {
@@ -136,13 +165,6 @@ button.btn:focus-visible {
 }
 
 .ag-row:hover {
-  cursor: pointer;
-}
-
-.contextual-filter-button {
-  display: flex;
-  align-items: center;
-  gap: 6px;
   cursor: pointer;
 }
 
@@ -344,11 +366,62 @@ textarea {
 .ag-root-wrapper {
   border-radius: 0 !important;
 }
-.ag-theme-params-1 {
+/* .ag-theme-params-1 {
   margin-top: -10px;
   margin-left: -8px;
 }
 .ag-theme-alpine {
   margin-top: 10px;
   margin-left: 8px;
+} */
+
+@media (max-width: 768px) {
+
+
+  /* For WebKit browsers (Chrome, Safari, Edge) */
+  .ag-theme-alpine::-webkit-scrollbar:vertical {
+    width: 50px; /* 👈 wider scroll on mobile */
+  }
+  .util-group {
+    flex-direction: column;
+  }
+  .toolbar-header {
+    border: none;
+    border-bottom: 1px solid #ccc;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.5rem 1rem;
+  }
+  .toolbar {
+    display: flex;
+    flex-direction: row;
+    gap: 0.5rem;
+  }
+  .toolbar > * {
+    margin-bottom: 0;
+  }
+  .textile.mobile {
+    margin-right: 8px;
+    display: block !important;
+  }
+  .textile.desktop {
+    display: none !important;
+  }
+  .order-id {
+    max-width: 84%;
+  }
+  .machine-card {
+    min-width: 100%;
+    height: 96%;
+  }
+
+  /* .ag-theme-alpine::-webkit-scrollbar-thumb {
+    background-color: rgba(150, 150, 150, 0.6);
+    border-radius: 8px;
+  }
+
+  .ag-theme-alpine::-webkit-scrollbar-track {
+    background: rgba(240, 240, 240, 0.3);
+  } */
 }

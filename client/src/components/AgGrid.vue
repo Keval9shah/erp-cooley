@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useGridFilters } from "../composables/useGridFilters";
-import { ref, onMounted, onUnmounted, reactive, toRaw } from "vue";
+import { ref, onMounted, reactive, toRaw } from "vue";
 import { AgGridVue } from "ag-grid-vue3";
 import { useCsvParser } from "../composables/useCSVParser";
 import { Splitpanes, Pane } from "splitpanes";
@@ -26,14 +26,14 @@ const columnDefs: ColDef[] = [
   { headerName: "Fab to Inspect/Unassign", field: "fabToInspectUnassign", valueFormatter: insertComma },
   { headerName: "FG Panel Items", field: "fgPanelItems", width: 135 },
   { headerName: "FG MO", field: "fgMo" },
-  { headerName: "Fab Item", field: "fabItem" },
+  { headerName: "Fab Item", field: "fabItem", valueGetter: (params) => { const row = params.data; return row.fabMo && row.fabMo.endsWith("TER") ? row.fabItem : `${row.fabItem} (${row.fabMo.replace(/^0+/, "")})`; } },
   { headerName: "Customer", field: "shipToCustomerName" },
   { headerName: "Core Size", field: "coreSize" },
   { headerName: "A Grade Completed", field: "aGradeCompleted", valueFormatter: insertComma },
   { headerName: "FG Req Qty", field: "fgReqQty", valueFormatter: insertComma },
   { headerName: "Fab Metres Prod.", field: "fabMetresProd", valueFormatter: insertComma },
   { headerName: "Available Master Qty", field: "availableMasterQty", valueFormatter: insertComma },
-  { headerName: "Fab MO", field: "fabMo" },
+  // { headerName: "Fab MO", field: "fabMo" },
   { headerName: "Target Roll Len", field: "targetRollLen" },
   { headerName: "Hrs", field: "hrs" },
   { headerName: "Assigned Machine", field: "assignedMachine" },
@@ -61,6 +61,7 @@ function openModal() {
 }
 function closeModal() {
   showModal.value = false;
+  rawCsv.value = "";
 }
 async function applyCsv() {
   await parseCsv(rawCsv.value);
@@ -97,19 +98,8 @@ onMounted(async () => {
     machineQueues[item.machine_name].push(item.inspection_jobs);
     gridApi.value?.applyTransaction({ remove: [{ order_id: (item.inspection_jobs as any).order_id }] });
   });
-  document.addEventListener("click", closeDropdown);
   scrollFunction();
 });
-onUnmounted(() => document.removeEventListener("click", closeDropdown));
-
-function closeDropdown(event: MouseEvent) {
-  const target = event.target as HTMLElement;
-  const btn = document.getElementById("contextual-filter-button");
-  const menu = document.getElementById("filter-dropdown-menu");
-  if (btn && !btn.contains(target) && menu && !menu.contains(target)) {
-    showDropdown.value = false;
-  }
-}
 
 function formatDateCell(params: any, appendStr = "") {
   const raw = params.value;
@@ -219,22 +209,24 @@ const gridOptions: GridOptions = {
   onFirstDataRendered: resizeCells,
   getRowStyle: (params) => {
     const data = params.data;
-    const req = data.fgReqQty;
+    const ratio = getRatio(data);
 
-    const noOfPanels = getNumberOfPanels(data.fgPanelItems);
-    if (req === 0) return {};
-
-    const calculatedValueForRatio = (data.fabToInspectUnassign + data.availableMasterQty) * noOfPanels;
-    const ratio = (calculatedValueForRatio * 100) / (req - data.aGradeCompleted);
-
-    if (ratio < 20 && req > data.aGradeCompleted) {
+    if (ratio < 20 && data.fgReqQty > data.aGradeCompleted) {
       return { backgroundColor: "#1a1a1a" };
     }
     return {} as RowStyle;
   },
 };
 
-const { currentFilterState, currentDateFilterState, showDropdown, showDateDropdown, jobTypeFilterButtonText, dateFilterButtonText, machinesToShow, selectJobTypeFilterOption, selectDateFilterOption, cycleJobTypeFilterOptions, cycleDateFilterOptions, scrollFunction } = useGridFilters(gridApi, resizeCells, registerDropZones);
+const getRatio = (data: any) => {
+  const req = data.fgReqQty;
+  const noOfPanels = getNumberOfPanels(data.fgPanelItems);
+  if (req === 0) return 100;
+  const calculatedValueForRatio = (data.fabToInspectUnassign + data.availableMasterQty) * noOfPanels;
+  return (calculatedValueForRatio * 100) / (req - data.aGradeCompleted);
+};
+
+const { jobTypeFilterButtonText, dateFilterButtonText, machinesToShow, cycleJobTypeFilterOptions, cycleDateFilterOptions, scrollFunction } = useGridFilters(gridApi, resizeCells, registerDropZones);
 
 function formatMachineName(machine: string) {
   return machine.replace(/#/g, "<span class='hashtag'>#</span>").replace(/_/g, " ");
@@ -268,41 +260,17 @@ const myTheme = themeAlpine.withPart(colorSchemeDarkBlue);
 
     <Splitpanes class="default-theme" horizontal style="height: 100vh">
       <!-- Machine Queues -->
-      <Pane min-size="35" max-size="70" size="45">
+      <Pane min-size="35" max-size="70" size="48">
         <div class="util-group">
           <div class="toolbar-header">
-            <button class="btn">🧵 Textile</button>
+            <button class="textile btn desktop"><span>🧵</span> <div>Textile</div></button>
+            <button class="textile btn mobile">🧵 Textile</button>
             <div class="toolbar">
-              <div><button class="btn" @click="openModal">➕ Data</button></div>
+              <button class="btn" @click="openModal">✚ Data</button>
               <!-- Job Type Filter -->
-              <div class="contextual-filter-container">
-                <div class="filter-button-group">
-                  <button class="btn filter-main-btn" @click="cycleJobTypeFilterOptions">
-                    {{ jobTypeFilterButtonText }}
-                  </button>
-                  <button class="btn filter-arrow-btn" @click.stop="showDropdown = !showDropdown">▼</button>
-                </div>
-                <div v-if="showDropdown" id="filter-dropdown-menu" class="filter-dropdown-menu">
-                  <button class="btn" @click="selectJobTypeFilterOption('all')" :class="{ active: currentFilterState === 'all' }">All Jobs</button>
-                  <button class="btn" @click="selectJobTypeFilterOption('inspection')" :class="{ active: currentFilterState === 'inspection' }">Inspection</button>
-                  <button class="btn" @click="selectJobTypeFilterOption('slitter')" :class="{ active: currentFilterState === 'slitter' }">Slitter</button>
-                  <button class="btn" @click="selectJobTypeFilterOption('mill')" :class="{ active: currentFilterState === 'mill' }">Kickouts</button>
-                </div>
-              </div>
+              <button class="btn filter-main-btn" @click="cycleJobTypeFilterOptions">{{ jobTypeFilterButtonText }}</button>
               <!-- Date Filter -->
-              <div class="contextual-filter-container">
-                <div class="filter-button-group">
-                  <button class="btn filter-main-btn" @click="cycleDateFilterOptions">
-                    {{ dateFilterButtonText }}
-                  </button>
-                  <button class="btn filter-arrow-btn" @click.stop="showDateDropdown = !showDateDropdown">▼</button>
-                </div>
-                <div v-if="showDateDropdown" class="filter-dropdown-menu">
-                  <button class="btn" @click="selectDateFilterOption('all')" :class="{ active: currentDateFilterState === 'all' }">All Dates</button>
-                  <button class="btn" @click="selectDateFilterOption('thisWeek')" :class="{ active: currentDateFilterState === 'thisWeek' }">This Week</button>
-                  <button class="btn" @click="selectDateFilterOption('nextWeek')" :class="{ active: currentDateFilterState === 'nextWeek' }">Next Week</button>
-                </div>
-              </div>
+              <button class="btn filter-main-btn" @click="cycleDateFilterOptions">{{ dateFilterButtonText }}</button>
             </div>
           </div>
           <div class="machines">
@@ -313,7 +281,7 @@ const myTheme = themeAlpine.withPart(colorSchemeDarkBlue);
                   <button class="remove-order-btn" @click.stop="removeOrder(machine, index)" title="Remove order">✕</button>
                   <template v-if="order.shipToCustomerName">
                     <div class="order-id">{{ order.fgMo }} - {{ order.shipToCustomerName }}</div>
-                    <div class="order-item">{{ order.fabItem }} | {{ order.coreSize }}</div>
+                    <div class="order-item"><span :class="getRatio(order)<20 ? 'low-ratio' : ''">{{ order.fabItem }}</span> | {{ order.coreSize }}</div>
                   </template>
                   <template v-else>
                     <div class="order-id">{{ order.fgMo }} - {{ order.fabItem }}</div>
