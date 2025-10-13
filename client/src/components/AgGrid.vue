@@ -100,7 +100,7 @@ const machineQueues = reactive<Record<string, any[]>>({
   "SL_#2": [],
 });
 
-const selectedMachine = ref(null);
+const selectedMachine = ref('');
 onMounted(async () => {
   selectedMachine.value = machinesToShow.value[0];
   Data.value = await getInspectionJobs();
@@ -308,7 +308,7 @@ const myTheme = themeAlpine.withPart(colorSchemeDarkBlue);
         <div class="util-group" v-if="isMobile">
           <div class="machines">
             <div class="tabs">
-              <button v-for="machine in machinesToShow" v-html="formatMachineName(machine)" :key="machine" class="tab" :class="{ active: selectedMachine === machine }" @click="selectedMachine = machine"></button>
+              <div v-for="machine in machinesToShow" v-html="formatMachineName(machine)" :key="machine" class="tab" :class="{ active: selectedMachine === machine }" @click="selectedMachine = machine"></div>
             </div>
 
             <div class="machine-content" v-if="selectedMachine">
