@@ -14,19 +14,27 @@ ModuleRegistry.registerModules([AllCommunityModule]);
 const { Data, parseCsv } = useCsvParser();
 const rawCsv = ref("");
 const showModal = ref(false);
-
+const isMobile = ref(window.innerWidth < 768);
 const gridApi = ref<GridApi | null>(null);
+const { jobTypeFilterButtonText, dateFilterButtonText, machinesToShow, cycleJobTypeFilterOptions, cycleDateFilterOptions, scrollFunction } = useGridFilters(gridApi, resizeCells, registerDropZones);
 
 function insertComma(params: any) {
   return params.value != null ? params.value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "";
 }
 const columnDefs: ColDef[] = [
   { headerName: "MO Status", field: "moStatus" },
-  { headerName: "SO Promise Date", field: "soPromiseDate", valueGetter: (params) => (params.data.soPromiseDate ? new Date(params.data.soPromiseDate+"T00:00") : null), valueFormatter: formatDateCell, filter: "agDateColumnFilter" },
+  { headerName: "SO Promise Date", field: "soPromiseDate", valueGetter: (params) => (params.data.soPromiseDate ? new Date(params.data.soPromiseDate + "T00:00") : null), valueFormatter: formatDateCell, filter: "agDateColumnFilter" },
   { headerName: "Fab to Inspect/Unassign", field: "fabToInspectUnassign", valueFormatter: insertComma },
   { headerName: "FG Panel Items", field: "fgPanelItems", width: 135 },
   { headerName: "FG MO", field: "fgMo" },
-  { headerName: "Fab Item", field: "fabItem", valueGetter: (params) => { const row = params.data; return row.fabMo && row.fabMo.endsWith("TER") ? row.fabItem : `${row.fabItem} (${row.fabMo.replace(/^0+/, "")})`; } },
+  {
+    headerName: "Fab Item",
+    field: "fabItem",
+    valueGetter: (params) => {
+      const row = params.data;
+      return row.fabMo && row.fabMo.endsWith("TER") ? row.fabItem : `${row.fabItem} (${row.fabMo.replace(/^0+/, "")})`;
+    },
+  },
   { headerName: "Customer", field: "shipToCustomerName" },
   { headerName: "Core Size", field: "coreSize" },
   { headerName: "A Grade Completed", field: "aGradeCompleted", valueFormatter: insertComma },
@@ -92,7 +100,9 @@ const machineQueues = reactive<Record<string, any[]>>({
   "SL_#2": [],
 });
 
+const selectedMachine = ref(null);
 onMounted(async () => {
+  selectedMachine.value = machinesToShow.value[0];
   Data.value = await getInspectionJobs();
   (await getMachineQueue()).forEach((item) => {
     machineQueues[item.machine_name].push(item.inspection_jobs);
@@ -226,8 +236,6 @@ const getRatio = (data: any) => {
   return (calculatedValueForRatio * 100) / (req - data.aGradeCompleted);
 };
 
-const { jobTypeFilterButtonText, dateFilterButtonText, machinesToShow, cycleJobTypeFilterOptions, cycleDateFilterOptions, scrollFunction } = useGridFilters(gridApi, resizeCells, registerDropZones);
-
 function formatMachineName(machine: string) {
   return machine.replace(/#/g, "<span class='hashtag'>#</span>").replace(/_/g, " ");
 }
@@ -260,11 +268,13 @@ const myTheme = themeAlpine.withPart(colorSchemeDarkBlue);
 
     <Splitpanes class="default-theme" horizontal style="height: 100vh">
       <!-- Machine Queues -->
-      <Pane min-size="35" max-size="70" size="48">
-        <div class="util-group">
-          <div class="toolbar-header">
-            <button class="textile btn desktop"><span>🧵</span> <div>Textile</div></button>
-            <button class="textile btn mobile">🧵 Textile</button>
+      <Pane min-size="35" max-size="70" :size="isMobile ? '70' : '48'">
+        <div class="util-group" v-if="!isMobile">
+          <div v-if="!isMobile" class="toolbar-header">
+            <button class="textile btn">
+              <span>🧵</span>
+              <div>Textile</div>
+            </button>
             <div class="toolbar">
               <button class="btn" @click="openModal">✚ Data</button>
               <!-- Job Type Filter -->
@@ -281,7 +291,9 @@ const myTheme = themeAlpine.withPart(colorSchemeDarkBlue);
                   <button class="remove-order-btn" @click.stop="removeOrder(machine, index)" title="Remove order">✕</button>
                   <template v-if="order.shipToCustomerName">
                     <div class="order-id">{{ order.fgMo }} - {{ order.shipToCustomerName }}</div>
-                    <div class="order-item"><span :class="getRatio(order)<20 ? 'low-ratio' : ''">{{ order.fabItem }}</span> | {{ order.coreSize }}</div>
+                    <div class="order-item">
+                      <span :class="getRatio(order) < 20 ? 'low-ratio' : ''">{{ order.fabItem }}</span> | {{ order.coreSize }}
+                    </div>
                   </template>
                   <template v-else>
                     <div class="order-id">{{ order.fgMo }} - {{ order.fabItem }}</div>
@@ -290,6 +302,41 @@ const myTheme = themeAlpine.withPart(colorSchemeDarkBlue);
                   <div class="order-qty">{{ order.aGradeCompleted }} / {{ order.fgReqQty }} ({{ ((parseFloat(order.hrs) * parseFloat(order.openQty)) / parseFloat(order.fgReqQty)).toFixed(2) }} hrs)</div>
                 </div>
               </div>
+            </div>
+          </div>
+        </div>
+        <div class="util-group" v-if="isMobile">
+          <div class="machines">
+            <div class="tabs">
+              <button v-for="machine in machinesToShow" v-html="formatMachineName(machine)" :key="machine" class="tab" :class="{ active: selectedMachine === machine }" @click="selectedMachine = machine"></button>
+            </div>
+
+            <div class="machine-content" v-if="selectedMachine">
+              <div v-for="(order, index) in machineQueues[selectedMachine]" :key="order.fgMo + '-' + index" :class="order.moStatus === 'Closed' ? 'order-card bg-red' : 'order-card'" draggable="true">
+                <button class="remove-order-btn" @click.stop="removeOrder(selectedMachine, index)" title="Remove order">✕</button>
+
+                <template v-if="order.shipToCustomerName">
+                  <div class="order-id">{{ order.fgMo }} - {{ order.shipToCustomerName }}</div>
+                  <div class="order-item">
+                    <span :class="{ 'low-ratio': getRatio(order) < 20 }">{{ order.fabItem }}</span> | {{ order.coreSize }}
+                  </div>
+                </template>
+                <template v-else>
+                  <div class="order-id">{{ order.fgMo }} - {{ order.fabItem }}</div>
+                </template>
+
+                <div class="order-date">{{ formatDateCell({ value: order.soPromiseDate }, "T00:00") }}</div>
+                <div class="order-qty">{{ order.aGradeCompleted }} / {{ order.fgReqQty }} ({{ ((parseFloat(order.hrs) * parseFloat(order.openQty)) / parseFloat(order.fgReqQty)).toFixed(2) }} hrs)</div>
+              </div>
+            </div>
+          </div>
+          <div v-if="isMobile" class="toolbar-header">
+            <div class="toolbar mobile">
+              <!-- Job Type Filter -->
+              <div class="btn filter-main-btn" @click="cycleJobTypeFilterOptions">{{ jobTypeFilterButtonText }}</div>
+              •
+              <!-- Date Filter -->
+              <div class="btn filter-main-btn" @click="cycleDateFilterOptions">{{ dateFilterButtonText }}</div>
             </div>
           </div>
         </div>

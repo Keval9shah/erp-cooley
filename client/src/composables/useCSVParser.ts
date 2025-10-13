@@ -44,9 +44,9 @@ export function useCsvParser() {
     "days", 
     "scheduleCompleteDate"
   ]
-  
+
   const Data = ref<any[]>([]);
-  
+
   function convertFields(data: any[]) {
     const convertToFloat = (val: any) => (val ? parseFloat(val.replace(/,/g, "")) : 0);
     const convertToInt = (val: any) => (val ? parseInt(val.replace(/,/g, ""), 10) : 0);

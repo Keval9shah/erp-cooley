@@ -1,5 +1,3 @@
 TODO\
--> Supabase database\
--> Drag and Drop UI\
--> Dropdown UI change\
+-> UI for mobile - WIP
 -> Textile
