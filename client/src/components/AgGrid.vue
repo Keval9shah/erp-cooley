@@ -306,11 +306,10 @@ const myTheme = themeAlpine.withPart(colorSchemeDarkBlue);
           </div>
         </div>
         <div class="util-group" v-if="isMobile">
+          <div class="tabs2">
+            <div v-for="machine in machinesToShow" v-html="formatMachineName(machine)" :key="machine" class="tab" :class="{ active: selectedMachine === machine }" @click="selectedMachine = machine"></div>
+          </div>
           <div class="machines">
-            <div class="tabs">
-              <div v-for="machine in machinesToShow" v-html="formatMachineName(machine)" :key="machine" class="tab" :class="{ active: selectedMachine === machine }" @click="selectedMachine = machine"></div>
-            </div>
-
             <div class="machine-content" v-if="selectedMachine">
               <div v-for="(order, index) in machineQueues[selectedMachine]" :key="order.fgMo + '-' + index" :class="order.moStatus === 'Closed' ? 'order-card bg-red' : 'order-card'" draggable="true">
                 <button class="remove-order-btn" @click.stop="removeOrder(selectedMachine, index)" title="Remove order">✕</button>
