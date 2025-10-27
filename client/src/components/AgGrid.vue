@@ -100,15 +100,18 @@ const machineQueues = reactive<Record<string, any[]>>({
   "SL_#2": [],
 });
 
-const selectedMachine = ref('');
+const selectedMachine = ref("");
 onMounted(async () => {
   selectedMachine.value = machinesToShow.value[0];
-  Data.value = await getInspectionJobs();
+  if (!isMobile.value) {
+    Data.value = await getInspectionJobs();
+  }
   (await getMachineQueue()).forEach((item) => {
     machineQueues[item.machine_name].push(item.inspection_jobs);
-    gridApi.value?.applyTransaction({ remove: [{ order_id: (item.inspection_jobs as any).order_id }] });
+
+    !isMobile.value && gridApi.value?.applyTransaction({ remove: [{ order_id: (item.inspection_jobs as any).order_id }] });
   });
-  scrollFunction();
+  !isMobile.value && scrollFunction();
 });
 
 function formatDateCell(params: any, appendStr = "") {
@@ -268,7 +271,7 @@ const myTheme = themeAlpine.withPart(colorSchemeDarkBlue);
 
     <Splitpanes class="default-theme" horizontal style="height: 100vh">
       <!-- Machine Queues -->
-      <Pane min-size="35" max-size="70" :size="isMobile ? '70' : '48'">
+      <Pane min-size="35" :max-size="!isMobile ? '70' : '100'" :size="isMobile ? '100' : '48'">
         <div class="util-group" v-if="!isMobile">
           <div v-if="!isMobile" class="toolbar-header">
             <button class="textile btn">
@@ -289,14 +292,11 @@ const myTheme = themeAlpine.withPart(colorSchemeDarkBlue);
               <div class="machine-orders">
                 <div v-for="(order, index) in machineQueues[machine]" :key="order.fgMo + '-' + index" :class="order.moStatus === 'Closed' ? 'order-card bg-red' : 'order-card'" draggable="true">
                   <button class="remove-order-btn" @click.stop="removeOrder(machine, index)" title="Remove order">✕</button>
+                  <div class="order-id">{{ order.fgMo }} - {{ order.shipToCustomerName ? order.shipToCustomerName : order.fabItem }}</div>
                   <template v-if="order.shipToCustomerName">
-                    <div class="order-id">{{ order.fgMo }} - {{ order.shipToCustomerName }}</div>
                     <div class="order-item">
-                      <span :class="getRatio(order) < 20 ? 'low-ratio' : ''">{{ order.fabItem }}</span> | {{ order.coreSize }}
+                      <span :class="getRatio(order) < 20 ? 'low-ratio' : ''">{{ order.fabItem }} {{ order.fabMo == "USE MASTER" ? "" : "(" + order.fabMo.replace(/^0+/, "") + ")" }}</span> | {{ order.coreSize }}
                     </div>
-                  </template>
-                  <template v-else>
-                    <div class="order-id">{{ order.fgMo }} - {{ order.fabItem }}</div>
                   </template>
                   <div class="order-date">{{ formatDateCell({ value: order.soPromiseDate }, "T00:00") }}</div>
                   <div class="order-qty">{{ order.aGradeCompleted }} / {{ order.fgReqQty }} ({{ ((parseFloat(order.hrs) * parseFloat(order.openQty)) / parseFloat(order.fgReqQty)).toFixed(2) }} hrs)</div>
@@ -306,41 +306,24 @@ const myTheme = themeAlpine.withPart(colorSchemeDarkBlue);
           </div>
         </div>
         <div class="util-group" v-if="isMobile">
-          <div class="tabs2">
+          <div class="machines" v-if="selectedMachine">
+            <div v-for="(order, index) in machineQueues[selectedMachine]" :key="order.fgMo + '-' + index" :class="order.moStatus === 'Closed' ? 'order-card bg-red' : 'order-card'" draggable="true">
+              <div class="order-id">{{ order.fgMo }} - {{ order.shipToCustomerName ? order.shipToCustomerName : order.fabItem }}</div>
+              <template v-if="order.shipToCustomerName">
+                <div class="order-item">
+                  <span :class="getRatio(order) < 20 ? 'low-ratio' : ''">{{ order.fabItem }} {{ order.fabMo == "USE MASTER" ? "" : "(" + order.fabMo.replace(/^0+/, "") + ")" }}</span> | {{ order.coreSize }}
+                </div>
+              </template>
+              <div class="order-date">{{ formatDateCell({ value: order.soPromiseDate }, "T00:00") }}</div>
+              <div class="order-qty">{{ order.aGradeCompleted }} / {{ order.fgReqQty }} ({{ ((parseFloat(order.hrs) * parseFloat(order.openQty)) / parseFloat(order.fgReqQty)).toFixed(2) }} hrs)</div>
+            </div>
+          </div>
+          <div class="tabs">
             <div v-for="machine in machinesToShow" v-html="formatMachineName(machine)" :key="machine" class="tab" :class="{ active: selectedMachine === machine }" @click="selectedMachine = machine"></div>
-          </div>
-          <div class="machines">
-            <div class="machine-content" v-if="selectedMachine">
-              <div v-for="(order, index) in machineQueues[selectedMachine]" :key="order.fgMo + '-' + index" :class="order.moStatus === 'Closed' ? 'order-card bg-red' : 'order-card'" draggable="true">
-                <button class="remove-order-btn" @click.stop="removeOrder(selectedMachine, index)" title="Remove order">✕</button>
-
-                <template v-if="order.shipToCustomerName">
-                  <div class="order-id">{{ order.fgMo }} - {{ order.shipToCustomerName }}</div>
-                  <div class="order-item">
-                    <span :class="{ 'low-ratio': getRatio(order) < 20 }">{{ order.fabItem }}</span> | {{ order.coreSize }}
-                  </div>
-                </template>
-                <template v-else>
-                  <div class="order-id">{{ order.fgMo }} - {{ order.fabItem }}</div>
-                </template>
-
-                <div class="order-date">{{ formatDateCell({ value: order.soPromiseDate }, "T00:00") }}</div>
-                <div class="order-qty">{{ order.aGradeCompleted }} / {{ order.fgReqQty }} ({{ ((parseFloat(order.hrs) * parseFloat(order.openQty)) / parseFloat(order.fgReqQty)).toFixed(2) }} hrs)</div>
-              </div>
-            </div>
-          </div>
-          <div v-if="isMobile" class="toolbar-header">
-            <div class="toolbar mobile">
-              <!-- Job Type Filter -->
-              <div class="btn filter-main-btn" @click="cycleJobTypeFilterOptions">{{ jobTypeFilterButtonText }}</div>
-              •
-              <!-- Date Filter -->
-              <div class="btn filter-main-btn" @click="cycleDateFilterOptions">{{ dateFilterButtonText }}</div>
-            </div>
           </div>
         </div>
       </Pane>
-      <Pane max-size="65">
+      <Pane v-if="!isMobile" max-size="65">
         <div class="ag-theme-alpine">
           <AgGridVue class="ag-grid" :theme="myTheme" :rowData="Data" :grid-options="gridOptions" />
         </div>

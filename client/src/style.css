@@ -330,10 +330,12 @@ textarea {
   font-weight: 400;
   display: flex;
   flex-direction: column;
+  box-sizing: border-box;
+  width: 100%;
   color: #afafaf;
   gap: 0.25rem;
   /* border: 1px solid #5cb4c8; */
-  border: 3px solid #343c45;
+  box-shadow: 0px 8px 8px -8px #364851
 }
 .order-card:hover {
   background: rgba(92, 180, 200, 0.1);
@@ -379,6 +381,9 @@ textarea {
   /* .ag-theme-alpine::-webkit-scrollbar:vertical {
     width: 50px;
   } */
+  .order-card {
+    font-size: 15px;
+  }
   .util-group {
     flex-direction: column;
   }
@@ -403,49 +408,43 @@ textarea {
     margin-bottom: 0;
   }
   .order-id {
-    max-width: 84%;
-  }
-  .machine-card {
-    min-width: 100%;
-    height: 96%;
+    font-size: 24px;
+    max-width: 85%;
   }
 
   .machines {
+    background-color: rgb(21 27 31);
     display: flex;
     flex-direction: column;
     height: 100%;
-  }
-  .tabs {
-    display: flex;
-    overflow-x: auto;
-    background: #222;
+    width: 100%;
+    box-sizing: border-box;
   }
   .tab {
-    padding: 10px 16px;
+    padding: 10px 20px;
     cursor: pointer;
     background: none;
     border-radius: 10px;
-    border: 2px transparent solid;
     color: #aaa;
     font-weight: 500;
+    font-size: 1.8rem;
     transition: 0.2s;
+    /* border: 1px solid transparent; */
   }
   .tab:hover {
     color: #fff;
   }
   .tab.active {
     color: #fff;
-    border: 2px grey solid;
+    background: #4a4a4ab9;
+    /* border: 1px grey solid; */
+    box-shadow: 2px 2px 15px #0b0b0b;
   }
   .machine-content {
     flex: 1;
     overflow-y: auto;
     padding: 10px;
     gap: 1rem;
-    width: 100%;
-    box-sizing: border-box;
-  }
-  .machines {
     width: 100%;
     box-sizing: border-box;
   }
@@ -459,12 +458,14 @@ textarea {
     background: rgba(240, 240, 240, 0.3);
   } */
 
-  .tabs2 {
+  .tabs {
     display: flex;
     flex-direction: row;
     text-wrap: nowrap;
-    overflow-x: auto;
+    flex-wrap: wrap;
     background: #222;
-    padding: 8px 8px 16px 8px;
+    justify-content: center;
+    padding: 10px;
+    -webkit-tap-highlight-color: transparent;
   }
 }
