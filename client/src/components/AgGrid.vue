@@ -306,7 +306,7 @@ const myTheme = themeAlpine.withPart(colorSchemeDarkBlue);
           </div>
         </div>
         <div class="util-group" v-if="isMobile">
-          <div class="machines" :class="selectedMachine" v-if="selectedMachine">
+          <div class="machines" v-if="selectedMachine">
             <div v-for="(order, index) in machineQueues[selectedMachine]" :key="order.fgMo + '-' + index" :class="order.moStatus === 'Closed' ? 'order-card bg-red' : 'order-card'" draggable="true">
               <div class="order-id">{{ order.fgMo }} - {{ order.shipToCustomerName ? order.shipToCustomerName : order.fabItem }}</div>
               <template v-if="order.shipToCustomerName">
