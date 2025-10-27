@@ -139,7 +139,7 @@ export function useGridFilters(gridApi: any, resizeCells: () => void, registerDr
     applyGridFilter("date");
   }
 
-  const machinesToShow = ref(["#2", "#5", "#6", "Cooper", "#7", "SL #1", "SL #2"]);
+  const machinesToShow = ref(["#2", "#5", "#6", "Cooper", "#7", "SL_#1", "SL_#2"]);
 
   return {
     jobTypeFilterButtonText,
