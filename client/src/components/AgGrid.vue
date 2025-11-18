@@ -7,6 +7,8 @@ import { Splitpanes, Pane } from "splitpanes";
 import "splitpanes/dist/splitpanes.css";
 import { getInspectionJobs, insertMachineQueue, removeMachineQueue, getMachineQueue } from "../supabase";
 
+import OrderCard from "./OrderCard.vue";
+
 import { themeAlpine, ModuleRegistry, AllCommunityModule, colorSchemeDarkBlue } from "ag-grid-community";
 import type { GridApi, GridOptions, ColDef, RowStyle, RowDropZoneParams } from "ag-grid-community";
 ModuleRegistry.registerModules([AllCommunityModule]);
@@ -234,7 +236,7 @@ const gridOptions: GridOptions = {
 const getRatio = (data: any) => {
   const req = data.fgReqQty;
   const noOfPanels = getNumberOfPanels(data.fgPanelItems);
-  if (req === 0) return 100;
+  if ((req === 0) || (data.aGradeCompleted > req)) return 100;
   const calculatedValueForRatio = (data.fabToInspectUnassign + data.availableMasterQty) * noOfPanels;
   return (calculatedValueForRatio * 100) / (req - data.aGradeCompleted);
 };
@@ -290,33 +292,14 @@ const myTheme = themeAlpine.withPart(colorSchemeDarkBlue);
             <div v-for="machine in machinesToShow" :key="machine" class="machine-card" :id="machine">
               <div class="machine-name" v-html="formatMachineName(machine)"></div>
               <div class="machine-orders">
-                <div v-for="(order, index) in machineQueues[machine]" :key="order.fgMo + '-' + index" :class="order.moStatus === 'Closed' ? 'order-card bg-red' : 'order-card'" draggable="true">
-                  <button class="remove-order-btn" @click.stop="removeOrder(machine, index)" title="Remove order">✕</button>
-                  <div class="order-id">{{ order.fgMo }} - {{ order.shipToCustomerName ? order.shipToCustomerName : order.fabItem }}</div>
-                  <template v-if="order.shipToCustomerName">
-                    <div class="order-item">
-                      <span :class="getRatio(order) < 20 ? 'low-ratio' : ''">{{ order.fabItem }} {{ order.fabMo == "USE MASTER" ? "" : "(" + order.fabMo.replace(/^0+/, "") + ")" }}</span> | {{ order.coreSize }}
-                    </div>
-                  </template>
-                  <div class="order-date">{{ formatDateCell({ value: order.soPromiseDate }, "T00:00") }}</div>
-                  <div class="order-qty">{{ order.aGradeCompleted }} / {{ order.fgReqQty }} ({{ ((parseFloat(order.hrs) * parseFloat(order.openQty)) / parseFloat(order.fgReqQty)).toFixed(2) }} hrs)</div>
-                </div>
+                <OrderCard v-for="(order, index) in machineQueues[machine]" :key="order.fgMo + '-' + index" :order="order" :machine="machine" :formatDateCell="formatDateCell" :getRatio="getRatio" :index="index" @removeOrder="removeOrder" />
               </div>
             </div>
           </div>
         </div>
         <div class="util-group" v-if="isMobile">
           <div class="machines" v-if="selectedMachine">
-            <div v-for="(order, index) in machineQueues[selectedMachine]" :key="order.fgMo + '-' + index" :class="order.moStatus === 'Closed' ? 'order-card bg-red' : 'order-card'" draggable="true">
-              <div class="order-id">{{ order.fgMo }} - {{ order.shipToCustomerName ? order.shipToCustomerName : order.fabItem }}</div>
-              <template v-if="order.shipToCustomerName">
-                <div class="order-item">
-                  <span :class="getRatio(order) < 20 ? 'low-ratio' : ''">{{ order.fabItem }} {{ order.fabMo == "USE MASTER" ? "" : "(" + order.fabMo.replace(/^0+/, "") + ")" }}</span> | {{ order.coreSize }}
-                </div>
-              </template>
-              <div class="order-date">{{ formatDateCell({ value: order.soPromiseDate }, "T00:00") }}</div>
-              <div class="order-qty">{{ order.aGradeCompleted }} / {{ order.fgReqQty }} ({{ ((parseFloat(order.hrs) * parseFloat(order.openQty)) / parseFloat(order.fgReqQty)).toFixed(2) }} hrs)</div>
-            </div>
+            <OrderCard v-for="(order, index) in machineQueues[selectedMachine]" :key="order.fgMo + '-' + index" :order="order" :machine="selectedMachine" :formatDateCell="formatDateCell" :getRatio="getRatio" :index="index" @removeOrder="removeOrder" />
           </div>
           <div class="tabs">
             <div v-for="machine in machinesToShow" v-html="formatMachineName(machine)" :key="machine" class="tab" :class="{ active: selectedMachine === machine }" @click="selectedMachine = machine; console.log('Selected machine:', machine)"></div>

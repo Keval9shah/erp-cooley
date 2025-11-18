@@ -247,7 +247,7 @@ textarea {
 }
 .machine-card {
   height: 97%;
-  min-width: 350px;
+  min-width: 360px;
   background-color: #151b1f;
   border-radius: 1rem;
   color: #fff;
@@ -311,12 +311,21 @@ textarea {
   font-weight: bold;
   cursor: pointer;
   position: absolute;
-  top: 8px;
-  right: 8px;
+  top: 12px;
+  right: 12px;
   font-size: 20px;
   line-height: 1;
   padding: 0;
   user-select: none;
+}
+.roll-size {
+  position: absolute;
+  bottom: 8px;
+  right: 8px;
+  background: rgba(0, 0, 0, 0.5);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 12px;
 }
 
 .order-card {
@@ -326,7 +335,7 @@ textarea {
   padding-top: 0.8rem;
   border-radius: 0.5rem;
   /* cursor: grab; */
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 400;
   display: flex;
   flex-direction: column;
@@ -342,7 +351,7 @@ textarea {
 }
 .order-id {
   color: #d3e8ed;
-  font-size: 18px;
+  font-size: 20px;
   font-weight: 500;
   white-space: nowrap;
   overflow: hidden;
@@ -418,6 +427,7 @@ textarea {
     height: 100%;
     width: 100%;
     box-sizing: border-box;
+    flex-direction: column-reverse;
   }
   .tab {
     padding: 10px 20px;
@@ -467,4 +477,21 @@ textarea {
     padding: 10px;
     -webkit-tap-highlight-color: transparent;
   }
+}
+.text-progress {
+
+  /* Text is transparent, background shows through */
+  color: transparent;
+  background-clip: text;
+  -webkit-background-clip: text;
+
+  /* Green (filled) and red (unfilled) */
+  background-image:
+    linear-gradient(
+      to right,
+      #afafaf 0%,
+      #afafaf var(--p),
+      red var(--p),
+      red 100%
+    );
 }
