@@ -1,3 +1,7 @@
+/* ---------------------------------------------------- */
+/* 1. ROOT & BASE STYLES                                */
+/* ---------------------------------------------------- */
+
 :root {
   font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
@@ -13,11 +17,30 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
-.ag-theme-alpine {
-  /* text-align: left; */
-  height: 100%;
-  /* height: calc( 100vh - 352px ); */
+body {
+  margin: 0;
+  display: flex;
+  min-width: 320px;
 }
+
+#app {
+  width: 100%;
+  margin: 0 auto;
+  text-align: center;
+}
+
+h1 {
+  font-size: 3.2em;
+  line-height: 1.1;
+}
+
+.card {
+  padding: 2em;
+}
+
+/* ---------------------------------------------------- */
+/* 2. LINKS & BUTTONS                                   */
+/* ---------------------------------------------------- */
 
 a {
   font-weight: 500;
@@ -27,72 +50,6 @@ a {
 
 a:hover {
   color: #535bf2;
-}
-
-.ag-grid-tab {
-  text-align: left !important;
-}
-
-body {
-  margin: 0;
-  display: flex;
-  min-width: 320px;
-}
-
-h1 {
-  font-size: 3.2em;
-  line-height: 1.1;
-}
-
-.toolbar {
-  display: flex;
-  flex-direction: column;
-}
-
-.toolbar-header {
-  border-right: 1px solid #ccc;
-  min-width: fit-content;
-  display: flex;
-  background: #242424;
-  flex-direction: column;
-  justify-content: space-between;
-  align-items: flex-start;
-  padding: 1rem;
-}
-
-.header {
-  margin-top: 8px;
-  font-size: 28px;
-  font-family: fantasy;
-  text-wrap: wrap;
-  width: 125px;
-  padding-left: 8px;
-}
-
-.toolbar > * {
-  text-align: left;
-  width: fit-content;
-  margin-bottom: 10px;
-}
-
-.bg-red {
-  background-color: rgba(255, 0, 0, 0.1) !important;
-  border: 3px solid #640000 !important;
-}
-.bg-red .remove-order-btn {
-  color: #ff6666 !important;
-}
-
-.btn.textile {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 0px 16px 8px 20px;
-}
-
-.btn.textile span {
-  font-size: 1.8em;
 }
 
 button.btn {
@@ -114,60 +71,200 @@ button.btn:focus-visible {
   outline: 4px auto -webkit-focus-ring-color;
 }
 
-/* .ag-theme-params-1 {
-  margin-top: -10px;
-  margin-left: -8px;
-} */
-.ag-floating-filter-button-button {
-  margin: 0 4px;
-}
-.ag-floating-filter-button {
-  margin-left: 0 !important;
+.btn.textile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 0px 16px 8px 20px;
 }
 
-.ag-header-cell.ag-floating-filter.ag-focus-managed {
-  gap: 4px;
-  padding: 0 8px;
+.btn.textile span {
+  font-size: 1.8em;
 }
 
-.ag-wrapper.ag-input-wrapper.ag-text-field-input-wrapper::before {
-  display: none !important;
+.filter-button-group button:first-child {
+  margin-right: 0;
+  border-radius: 7px 0 0 7px;
+  border-right: 1px solid #ccc;
 }
-.ag-input-field-input.ag-text-field-input {
-  padding: 0 8px !important;
-}
-
-.card {
-  padding: 2em;
-}
-
-#app {
-  width: 100%;
-  margin: 0 auto;
-  text-align: center;
+.filter-button-group button:nth-child(2) {
+  margin-left: 0;
+  border-radius: 0 7px 7px 0;
 }
 
-/* AG GRID */
+/* ---------------------------------------------------- */
+/* 3. LAYOUT & TOOLBAR (Desktop)                        */
+/* ---------------------------------------------------- */
 
-.ag-grid {
+.util-group {
+  display: flex;
+  flex-direction: row;
   width: 100%;
   height: 100%;
 }
 
-.ag-row:hover {
-  cursor: pointer;
+.toolbar-header {
+  border-right: 1px solid #ccc;
+  min-width: fit-content;
+  display: flex;
+  background: #242424;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 1rem;
 }
 
-.filter-text {
-  cursor: pointer;
+.toolbar {
+  display: flex;
+  flex-direction: column;
 }
 
-.dropdown-arrow {
-  cursor: pointer;
-  padding: 0 6px;
-  min-width: 24px;
+.toolbar > * {
+  text-align: left;
+  width: fit-content;
+  margin-bottom: 10px;
+}
+
+.header {
+  margin-top: 8px;
+  font-size: 28px;
+  font-family: fantasy;
+  text-wrap: wrap;
+  width: 125px;
+  padding-left: 8px;
+}
+
+/* ---------------------------------------------------- */
+/* 4. MACHINE CARDS & ORDERS                            */
+/* ---------------------------------------------------- */
+
+.machines {
+  flex-grow: 1;
+  align-items: flex-start;
+  background-color: #22282e;
+  display: flex;
+  overflow-x: auto;
+  gap: 1rem;
+  padding: 1rem;
+  flex-wrap: wrap;
+}
+
+.machine-card {
+  height: 97%;
+  min-width: 360px;
+  background-color: #151b1f;
+  border-radius: 1rem;
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  position: relative;
+  scroll-padding-top: 48px;
+}
+.machine-card::-webkit-scrollbar {
+  display: none;
+}
+
+.machine-name {
+  padding: 0.5rem;
+  position: sticky;
+  top: -8px;
+  z-index: 10;
+  backdrop-filter: blur(3px);
+  border-bottom: 1px solid transparent;
+  font-weight: bold;
+  font-size: 32px;
   text-align: center;
+  font-family: fantasy;
 }
+.machine-name.scrolled {
+  background: rgba(110, 144, 156, 0.2);
+  padding-bottom: 0;
+  font-size: 24px;
+  transition: all 0.2s ease;
+  text-shadow: 1px 1px 2px rgb(0, 0, 0);
+}
+.machine-name.scrolled span {
+  font-size: 18px;
+}
+.machine-name span {
+  color: #646cff;
+  font-size: 24px;
+  vertical-align: super;
+  margin-right: 4px;
+}
+
+.machine-orders {
+  padding: 12px;
+  padding-top: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+}
+
+/* ORDER CARD */
+.order-card {
+  position: relative;
+  background: rgba(92, 180, 200, 0.059);
+  padding: 0.9rem;
+  padding-top: 0.8rem;
+  border-radius: 0.5rem;
+  font-size: 14px;
+  font-weight: 400;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  width: 100%;
+  color: #afafaf;
+  gap: 0.25rem;
+  box-shadow: 0px 8px 8px -8px #364851;
+}
+.order-card:hover {
+  background: rgba(92, 180, 200, 0.1);
+}
+
+.order-id {
+  color: #d3e8ed;
+  font-size: 20px;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 250px;
+  display: block;
+}
+.low-ratio {
+  font-weight: 600;
+  background-color: black !important;
+}
+
+.remove-order-btn {
+  background: transparent;
+  border: none;
+  color: #fff;
+  font-weight: bold;
+  cursor: pointer;
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  font-size: 20px;
+  line-height: 1;
+  padding: 0;
+  user-select: none;
+}
+
+.bg-red {
+  background-color: rgba(255, 0, 0, 0.1) !important;
+  border: 3px solid #640000 !important;
+}
+.bg-red .remove-order-btn {
+  color: #ff6666 !important;
+}
+
+/* ---------------------------------------------------- */
+/* 5. MODAL & TEXTAREA                                  */
+/* ---------------------------------------------------- */
 
 .modal-overlay {
   position: fixed;
@@ -204,114 +301,63 @@ button.btn:focus-visible {
   text-align: right;
 }
 
-.filter-button-group button:first-child {
-  margin-right: 0;
-  border-radius: 7px 0 0 7px;
-  border-right: 1px solid #ccc;
-}
-.filter-button-group button:nth-child(2) {
-  margin-left: 0;
-  border-radius: 0 7px 7px 0;
-}
-
 textarea {
   width: 100%;
   height: calc(100% - 110px);
   white-space: pre;
 }
 
-.util-group {
-  display: flex;
-  flex-direction: row;
+/* ---------------------------------------------------- */
+/* 6. AG GRID STYLES                                    */
+/* ---------------------------------------------------- */
+
+.ag-grid {
   width: 100%;
   height: 100%;
 }
 
-.machines {
-  /* height: 320px; */
-  flex-grow: 1;
-  align-items: flex-start;
-  background-color: #22282e;
-  display: flex;
-  overflow-x: auto;
-  gap: 1rem;
-  padding: 1rem;
-  flex-wrap: wrap;
-  /* justify-content: space-between; */
-}
-.machine-card {
-  height: 97%;
-  min-width: 360px;
-  background-color: #151b1f;
-  border-radius: 1rem;
-  color: #fff;
-  display: flex;
-  flex-direction: column;
-  overflow-y: auto;
-  position: relative;
-  scroll-padding-top: 48px;
-}
-.machine-card.mobile {
+.ag-theme-alpine {
   height: 100%;
 }
 
-.machine-name {
-  padding: 0.5rem;
-  position: sticky;
-  top: -8px;
-  z-index: 10;
-  backdrop-filter: blur(3px);
-  /* -webkit-backdrop-filter: blur(3px); */
-  border-bottom: 1px solid transparent;
-  font-weight: bold;
-  font-size: 32px;
-  text-align: center;
-  font-family: fantasy;
+.ag-grid-tab {
+  text-align: left !important;
 }
 
-.machine-card::-webkit-scrollbar {
-  display: none;
+.ag-root-wrapper {
+  border-radius: 0 !important;
 }
 
-.machine-name.scrolled {
-  background: rgba(110, 144, 156, 0.2);
-  padding-bottom: 0px; /* Adjust this value as needed */
-  font-size: 24px; /* Adjust this value as needed */
-  transition: all 0.2s ease;
-  text-shadow: 1px 1px 2px rgb(0, 0, 0);
-}
-.machine-name.scrolled span {
-  font-size: 18px; /* Adjust this value as needed */
-}
-
-.machine-name span {
-  color: #646cff;
-  font-size: 24px;
-  vertical-align: super;
-  margin-right: 4px;
-}
-
-.machine-orders {
-  padding: 12px;
-  padding-top: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 0.7rem;
-}
-.remove-order-btn {
-  background: transparent;
-  border: none;
-  color: #fff;
-  font-weight: bold;
+.ag-row:hover {
   cursor: pointer;
-  position: absolute;
-  top: 12px;
-  right: 12px;
-  font-size: 20px;
-  line-height: 1;
-  padding: 0;
-  user-select: none;
 }
+
+.ag-floating-filter-button-button {
+  margin: 0 4px;
+}
+.ag-floating-filter-button {
+  margin-left: 0 !important;
+}
+.ag-header-cell.ag-floating-filter.ag-focus-managed {
+  gap: 4px;
+  padding: 0 8px;
+}
+.ag-wrapper.ag-input-wrapper.ag-text-field-input-wrapper::before {
+  display: none !important;
+}
+.ag-input-field-input.ag-text-field-input {
+  padding: 0 8px !important;
+}
+
+/* ---------------------------------------------------- */
+/* 7. UTILITY & MISC.                                   */
+/* ---------------------------------------------------- */
+
+.filter-text,
+.dropdown-arrow {
+  cursor: pointer;
+}
+
 .roll-size {
   position: absolute;
   bottom: 8px;
@@ -322,83 +368,58 @@ textarea {
   font-size: 12px;
 }
 
-.order-card {
-  position: relative; /* so the remove button can be positioned inside */
-  background: rgba(92, 180, 200, 0.059);
-  padding: 0.9rem;
-  padding-top: 0.8rem;
-  border-radius: 0.5rem;
-  /* cursor: grab; */
-  font-size: 14px;
-  font-weight: 400;
-  display: flex;
-  flex-direction: column;
-  box-sizing: border-box;
-  width: 100%;
-  color: #afafaf;
-  gap: 0.25rem;
-  /* border: 1px solid #5cb4c8; */
-  box-shadow: 0px 8px 8px -8px #364851
-}
-.order-card:hover {
-  background: rgba(92, 180, 200, 0.1);
-}
-.order-id {
-  color: #d3e8ed;
-  font-size: 20px;
-  font-weight: 500;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 250px;
-  display: block;
+.dropdown-arrow {
+  padding: 0 6px;
+  min-width: 24px;
+  text-align: center;
 }
 
-.default-theme.splitpanes--horizontal > .splitpanes__splitter,
-.default-theme .splitpanes--horizontal > .splitpanes__splitter {
+.default-theme.splitpanes--horizontal > .splitpanes__splitter {
   background: rgba(59, 59, 59, 0.571) !important;
   height: 7px !important;
   border-top: none !important;
 }
 .default-theme.splitpanes--horizontal > .splitpanes__splitter:after,
-.default-theme .splitpanes--horizontal > .splitpanes__splitter:after,
-.default-theme.splitpanes--horizontal > .splitpanes__splitter:before,
-.default-theme .splitpanes--horizontal > .splitpanes__splitter:before {
+.default-theme.splitpanes--horizontal > .splitpanes__splitter:before {
   display: none !important;
 }
 
-.ag-root-wrapper {
-  border-radius: 0 !important;
+.item-span {
+  display: inline-block;
 }
-/* .ag-theme-params-1 {
-  margin-top: -10px;
-  margin-left: -8px;
+
+.text-progress {
+  color: transparent;
+  background-clip: text;
+  -webkit-background-clip: text;
+  background-image: linear-gradient(
+    to right,
+    #afafaf 0%,
+    #afafaf var(--p),
+    rgb(255, 95, 95) var(--p),
+    rgb(255, 95, 95) 100%
+  );
 }
-.ag-theme-alpine {
-  margin-top: 10px;
-  margin-left: 8px;
-} */
+
+/* ---------------------------------------------------- */
+/* 8. MEDIA QUERIES (Mobile)                            */
+/* ---------------------------------------------------- */
 
 @media (max-width: 768px) {
-  /* For WebKit browsers (Chrome, Safari, Edge) */
-  /* .ag-theme-alpine::-webkit-scrollbar:vertical {
-    width: 50px;
-  } */
-  .order-card {
-    font-size: 15px;
-  }
   .util-group {
     flex-direction: column;
   }
   .toolbar-header {
     border: none;
-    justify-content: center !important;
     box-shadow: 0 -1px 3px rgba(255, 255, 255, 0.2);
     z-index: 10;
     flex-direction: row;
     align-items: center;
     justify-content: space-between;
     padding: 0.5rem 1rem;
+  }
+  .toolbar-header > .header {
+    margin-top: 0;
   }
   .toolbar.mobile {
     width: 65%;
@@ -410,56 +431,26 @@ textarea {
   .toolbar > * {
     margin-bottom: 0;
   }
-  .order-id {
-    font-size: 24px;
-    max-width: 85%;
-  }
 
   .machines {
-    background-color: rgb(21 27 31);
+    background-color: rgb(21, 27, 31);
     display: flex;
     height: 100%;
     width: 100%;
     box-sizing: border-box;
     flex-direction: column-reverse;
   }
-  .tab {
-    padding: 10px 20px;
-    cursor: pointer;
-    background: none;
-    border-radius: 10px;
-    color: #aaa;
-    font-weight: 500;
-    font-size: 1.8rem;
-    transition: 0.2s;
-    /* border: 1px solid transparent; */
-  }
-  .tab:hover {
-    color: #fff;
-  }
-  .tab.active {
-    color: #fff;
-    background: #4a4a4ab9;
-    /* border: 1px grey solid; */
-    box-shadow: 2px 2px 15px #0b0b0b;
-  }
-  .machine-content {
-    flex: 1;
-    overflow-y: auto;
-    padding: 10px;
-    gap: 1rem;
-    width: 100%;
-    box-sizing: border-box;
+  .machine-card {
+    height: 100%;
   }
 
-  /* .ag-theme-alpine::-webkit-scrollbar-thumb {
-    background-color: rgba(150, 150, 150, 0.6);
-    border-radius: 8px;
+  .order-card {
+    font-size: 15px;
   }
-
-  .ag-theme-alpine::-webkit-scrollbar-track {
-    background: rgba(240, 240, 240, 0.3);
-  } */
+  .order-id {
+    font-size: 24px;
+    max-width: 85%;
+  }
 
   .tabs {
     display: flex;
@@ -471,29 +462,30 @@ textarea {
     padding: 10px;
     -webkit-tap-highlight-color: transparent;
   }
-}
-.text-progress {
-
-  /* Text is transparent, background shows through */
-  color: transparent;
-  background-clip: text;
-  -webkit-background-clip: text;
-
-  /* Green (filled) and red (unfilled) */
-  background-image:
-    linear-gradient(
-      to right,
-      #afafaf 0%,
-      #afafaf var(--p),
-      rgb(255, 95, 95) var(--p),
-      rgb(255, 95, 95) 100%
-    );
-}
-.item-span {
-  display: inline-block;
-}
-
-.low-ratio {
-  font-weight: 600;
-  background-color: black !important;
+  .tab {
+    padding: 10px 20px;
+    cursor: pointer;
+    background: none;
+    border-radius: 10px;
+    color: #aaa;
+    font-weight: 500;
+    font-size: 1.8rem;
+    transition: 0.2s;
+  }
+  .tab:hover {
+    color: #fff;
+  }
+  .tab.active {
+    color: #fff;
+    background: #4a4a4ab9;
+    box-shadow: 2px 2px 15px #0b0b0b;
+  }
+  .machine-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 10px;
+    gap: 1rem;
+    width: 100%;
+    box-sizing: border-box;
+  }
 }
