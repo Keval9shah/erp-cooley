@@ -83,12 +83,6 @@ h1 {
   color: #ff6666 !important;
 }
 
-.low-ratio {
-  color: #ff6666 !important;
-  font-weight: 600;
-  background-color: black !important;
-}
-
 .btn.textile {
   display: flex;
   flex-direction: column;
@@ -491,7 +485,15 @@ textarea {
       to right,
       #afafaf 0%,
       #afafaf var(--p),
-      red var(--p),
-      red 100%
+      rgb(255, 95, 95) var(--p),
+      rgb(255, 95, 95) 100%
     );
+}
+.item-span {
+  display: inline-block;
+}
+
+.low-ratio {
+  font-weight: 600;
+  background-color: black !important;
 }

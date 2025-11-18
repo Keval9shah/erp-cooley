@@ -33,14 +33,17 @@ function removeOrderLocal() {
 
     <template v-if="order.shipToCustomerName">
       <div class="order-item">
-        <span class="text-progress" :style="{ '--p': Math.min(100, getRatio(order)) + '%' }">
-          {{ order.fabItem.slice(0, 5) }}
-        </span>
+        <div :class="'item-span' + (getRatio(order) < 90 ? ' low-ratio' : '')">
+          <span class="text-progress" :style="{ '--p': Math.min(100, getRatio(order)) + '%' }">
+            {{ order.fabItem.slice(0, 5) }}
+          </span>
+        </div>
         {{ order.fabItem.slice(5) }}
         {{ order.fabMo === 'USE MASTER' ? '' : '(' + order.fabMo.replace(/^0+/, '') + ')' }}
         {{ ' | ' + order.coreSize }}
       </div>
     </template>
+    <!-- {{getRatio(order)}} -->
     <div class="order-date">
       {{ formatDateCell({ value: order.soPromiseDate }, 'T00:00') }}
     </div>
