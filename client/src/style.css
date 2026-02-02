@@ -3,24 +3,64 @@
 /* ---------------------------------------------------- */
 
 :root {
-  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
-  line-height: 1.5;
-  font-weight: 400;
+  /* --- Core Colors --- */
+  --accent-color: #646cff;
+  --accent-color-hover: #535bf2;
+  --accent-red-border: #640000;
+  --accent-red-text: #ff6666;
+  --accent-progress-fill: rgb(255, 95, 95);
 
-  color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #22282e;
+  /* --- Backgrounds (Surfaces) --- */
+  --bg-app: #22282e;
+  --bg-surface-1: #242424; /* Toolbar headers, Modals */
+  --bg-surface-2: #1a1a1a; /* Buttons */
+  --bg-machine-card: #151b1f;
+  --bg-mobile-machines: rgb(21, 27, 31);
+  --bg-mobile-tabs-container: #222;
 
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+  /* --- Text Colors --- */
+  --text-primary: rgba(255, 255, 255, 0.87);
+  --text-secondary: #afafaf; /* Order card body text */
+  --text-muted: #aaa; /* Mobile inactive tabs */
+  --text-white: #fff;
+  --text-order-id: #d3e8ed;
+
+  /* --- Borders & Dividers --- */
+  --border-light: #ccc;
+  --bg-splitter: rgba(59, 59, 59, 0.571);
+
+  /* --- State & Interactive Backgrounds --- */
+  --bg-order-card: rgba(92, 180, 200, 0.059);
+  --bg-order-card-hover: rgba(92, 180, 200, 0.1);
+  --bg-machine-name-scrolled: rgba(110, 144, 156, 0.2);
+  --bg-status-red: rgba(255, 0, 0, 0.1);
+  --bg-status-black: black;
+  --bg-mobile-tab-active: #4a4a4ab9;
+
+  /* --- Overlays & Shadows --- */
+  --bg-overlay: rgba(0, 0, 0, 0.6);
+  --bg-tag-overlay: rgba(0, 0, 0, 0.5); /* Roll size */
+  --shadow-text-dark: rgb(0, 0, 0);
+  --shadow-order-card: #364851;
+  --shadow-modal: rgba(0, 0, 0, 0.3);
+  --shadow-mobile-header: rgba(255, 255, 255, 0.2);
+  --shadow-mobile-tab-active: #0b0b0b;
 }
 
 body {
   margin: 0;
   display: flex;
   min-width: 320px;
+  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+  color-scheme: light dark;
+  color: var(--text-primary);
+  background-color: var(--bg-app);
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 #app {
@@ -44,12 +84,12 @@ h1 {
 
 a {
   font-weight: 500;
-  color: #646cff;
+  color: var(--accent-color);
   text-decoration: inherit;
 }
 
 a:hover {
-  color: #535bf2;
+  color: var(--accent-color-hover);
 }
 
 button.btn {
@@ -59,12 +99,12 @@ button.btn {
   font-size: 1em;
   font-weight: 500;
   font-family: inherit;
-  background-color: #1a1a1a;
+  background-color: var(--bg-surface-2);
   cursor: pointer;
   transition: border-color 0.25s;
 }
 button.btn:hover {
-  border-color: #646cff;
+  border-color: var(--accent-color);
 }
 button.btn:focus,
 button.btn:focus-visible {
@@ -86,7 +126,7 @@ button.btn:focus-visible {
 .filter-button-group button:first-child {
   margin-right: 0;
   border-radius: 7px 0 0 7px;
-  border-right: 1px solid #ccc;
+  border-right: 1px solid var(--border-light);
 }
 .filter-button-group button:nth-child(2) {
   margin-left: 0;
@@ -105,10 +145,10 @@ button.btn:focus-visible {
 }
 
 .toolbar-header {
-  border-right: 1px solid #ccc;
+  border-right: 1px solid var(--border-light);
   min-width: fit-content;
   display: flex;
-  background: #242424;
+  background: var(--bg-surface-1);
   flex-direction: column;
   justify-content: space-between;
   align-items: flex-start;
@@ -142,7 +182,7 @@ button.btn:focus-visible {
 .machines {
   flex-grow: 1;
   align-items: flex-start;
-  background-color: #22282e;
+  background-color: var(--bg-app);
   display: flex;
   overflow-x: auto;
   gap: 1rem;
@@ -153,9 +193,9 @@ button.btn:focus-visible {
 .machine-card {
   height: 97%;
   min-width: 360px;
-  background-color: #151b1f;
+  background-color: var(--bg-machine-card);
   border-radius: 1rem;
-  color: #fff;
+  color: var(--text-white);
   display: flex;
   flex-direction: column;
   overflow-y: auto;
@@ -179,17 +219,17 @@ button.btn:focus-visible {
   font-family: fantasy;
 }
 .machine-name.scrolled {
-  background: rgba(110, 144, 156, 0.2);
+  background: var(--bg-machine-name-scrolled);
   padding-bottom: 0;
   font-size: 24px;
   transition: all 0.2s ease;
-  text-shadow: 1px 1px 2px rgb(0, 0, 0);
+  text-shadow: 1px 1px 2px var(--shadow-text-dark);
 }
 .machine-name.scrolled span {
   font-size: 18px;
 }
 .machine-name span {
-  color: #646cff;
+  color: var(--accent-color);
   font-size: 24px;
   vertical-align: super;
   margin-right: 4px;
@@ -206,7 +246,7 @@ button.btn:focus-visible {
 /* ORDER CARD */
 .order-card {
   position: relative;
-  background: rgba(92, 180, 200, 0.059);
+  background: var(--bg-order-card);
   padding: 0.9rem;
   padding-top: 0.8rem;
   border-radius: 0.5rem;
@@ -216,16 +256,16 @@ button.btn:focus-visible {
   flex-direction: column;
   box-sizing: border-box;
   width: 100%;
-  color: #afafaf;
+  color: var(--text-secondary);
   gap: 0.25rem;
-  box-shadow: 0px 8px 8px -8px #364851;
+  box-shadow: 0px 8px 8px -8px var(--shadow-order-card);
 }
 .order-card:hover {
-  background: rgba(92, 180, 200, 0.1);
+  background: var(--bg-order-card-hover);
 }
 
 .order-id {
-  color: #d3e8ed;
+  color: var(--text-order-id);
   font-size: 20px;
   font-weight: 500;
   white-space: nowrap;
@@ -236,13 +276,13 @@ button.btn:focus-visible {
 }
 .low-ratio {
   font-weight: 600;
-  background-color: black !important;
+  background-color: var(--bg-status-black) !important;
 }
 
 .remove-order-btn {
   background: transparent;
   border: none;
-  color: #fff;
+  color: var(--text-white);
   font-weight: bold;
   cursor: pointer;
   position: absolute;
@@ -255,11 +295,11 @@ button.btn:focus-visible {
 }
 
 .bg-red {
-  background-color: rgba(255, 0, 0, 0.1) !important;
-  border: 3px solid #640000 !important;
+  background-color: var(--bg-status-red) !important;
+  border: 3px solid var(--accent-red-border) !important;
 }
 .bg-red .remove-order-btn {
-  color: #ff6666 !important;
+  color: var(--accent-red-text) !important;
 }
 
 /* ---------------------------------------------------- */
@@ -272,7 +312,7 @@ button.btn:focus-visible {
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: rgba(0, 0, 0, 0.6);
+  background-color: var(--bg-overlay);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -280,13 +320,13 @@ button.btn:focus-visible {
 }
 
 .modal {
-  background: #242424;
+  background: var(--bg-surface-1);
   padding: 2rem;
   padding-bottom: 2rem;
   border-radius: 6px;
   width: 88%;
   height: 75%;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 2px 10px var(--shadow-modal);
 }
 
 .modal h3 {
@@ -362,7 +402,7 @@ textarea {
   position: absolute;
   bottom: 8px;
   right: 8px;
-  background: rgba(0, 0, 0, 0.5);
+  background: var(--bg-tag-overlay);
   padding: 2px 6px;
   border-radius: 4px;
   font-size: 12px;
@@ -375,7 +415,7 @@ textarea {
 }
 
 .default-theme.splitpanes--horizontal > .splitpanes__splitter {
-  background: rgba(59, 59, 59, 0.571) !important;
+  background: var(--bg-splitter) !important;
   height: 7px !important;
   border-top: none !important;
 }
@@ -394,10 +434,10 @@ textarea {
   -webkit-background-clip: text;
   background-image: linear-gradient(
     to right,
-    #afafaf 0%,
-    #afafaf var(--p),
-    rgb(255, 95, 95) var(--p),
-    rgb(255, 95, 95) 100%
+    var(--text-secondary) 0%,
+    var(--text-secondary) var(--p),
+    var(--accent-progress-fill) var(--p),
+    var(--accent-progress-fill) 100%
   );
 }
 
@@ -411,7 +451,7 @@ textarea {
   }
   .toolbar-header {
     border: none;
-    box-shadow: 0 -1px 3px rgba(255, 255, 255, 0.2);
+    box-shadow: 0 -1px 3px var(--shadow-mobile-header);
     z-index: 10;
     flex-direction: row;
     align-items: center;
@@ -433,7 +473,7 @@ textarea {
   }
 
   .machines {
-    background-color: rgb(21, 27, 31);
+    background-color: var(--bg-mobile-machines);
     display: flex;
     height: 100%;
     width: 100%;
@@ -457,7 +497,7 @@ textarea {
     flex-direction: row;
     text-wrap: nowrap;
     flex-wrap: wrap;
-    background: #222;
+    background: var(--bg-mobile-tabs-container);
     justify-content: center;
     padding: 10px;
     -webkit-tap-highlight-color: transparent;
@@ -467,18 +507,18 @@ textarea {
     cursor: pointer;
     background: none;
     border-radius: 10px;
-    color: #aaa;
+    color: var(--text-muted);
     font-weight: 500;
     font-size: 1.8rem;
     transition: 0.2s;
   }
   .tab:hover {
-    color: #fff;
+    color: var(--text-white);
   }
   .tab.active {
-    color: #fff;
-    background: #4a4a4ab9;
-    box-shadow: 2px 2px 15px #0b0b0b;
+    color: var(--text-white);
+    background: var(--bg-mobile-tab-active);
+    box-shadow: 2px 2px 15px var(--shadow-mobile-tab-active);
   }
   .machine-content {
     flex: 1;

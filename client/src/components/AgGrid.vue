@@ -5,19 +5,23 @@ import { AgGridVue } from "ag-grid-vue3";
 import { useCsvParser } from "../composables/useCSVParser";
 import { Splitpanes, Pane } from "splitpanes";
 import "splitpanes/dist/splitpanes.css";
-import { getInspectionJobs, insertMachineQueue, removeMachineQueue, getMachineQueue } from "../supabase";
+import { getInspectionJobs, getClosedInspectionJobs, insertMachineQueue, removeMachineQueue, getMachineQueue } from "../supabase";
 
 import OrderCard from "./OrderCard.vue";
 
 import { themeAlpine, ModuleRegistry, AllCommunityModule, colorSchemeDarkBlue } from "ag-grid-community";
 import type { GridApi, GridOptions, ColDef, RowStyle, RowDropZoneParams } from "ag-grid-community";
+import { useRouter } from 'vue-router'
 ModuleRegistry.registerModules([AllCommunityModule]);
+
+const router = useRouter()
 
 const { Data, parseCsv } = useCsvParser();
 const rawCsv = ref("");
 const showModal = ref(false);
 const isMobile = ref(window.innerWidth < 768);
 const gridApi = ref<GridApi | null>(null);
+const closedLoaded = ref(false);
 const { jobTypeFilterButtonText, dateFilterButtonText, machinesToShow, cycleJobTypeFilterOptions, cycleDateFilterOptions, scrollFunction } = useGridFilters(gridApi, resizeCells, registerDropZones);
 
 function insertComma(params: any) {
@@ -222,6 +226,28 @@ const gridOptions: GridOptions = {
     registerDropZones();
   },
   onFirstDataRendered: resizeCells,
+  onFilterChanged: async (params: any) => {
+    const filterModel = params.api.getFilterModel();
+    const moStatusFilter = filterModel.moStatus;
+    if (moStatusFilter) {
+      const { type, filter } = moStatusFilter;
+      // If the filter is not excluding 'closed', load closed jobs
+      if (!(type === 'notContains' && filter.toLowerCase().includes('closed'))) {
+        if (!closedLoaded.value) {
+          const closedJobs = await getClosedInspectionJobs();
+          Data.value.push(...closedJobs);
+          closedLoaded.value = true;
+        }
+      }
+    } else {
+      // No filter on moStatus, load closed if not loaded
+      if (!closedLoaded.value) {
+        const closedJobs = await getClosedInspectionJobs();
+        Data.value.push(...closedJobs);
+        closedLoaded.value = true;
+      }
+    }
+  },
   getRowStyle: (params) => {
     const data = params.data;
     const ratio = getRatio(data);
@@ -276,7 +302,7 @@ const myTheme = themeAlpine.withPart(colorSchemeDarkBlue);
       <Pane min-size="35" :max-size="!isMobile ? '70' : '100'" :size="isMobile ? '100' : '48'">
         <div class="util-group" v-if="!isMobile">
           <div v-if="!isMobile" class="toolbar-header">
-            <button class="textile btn">
+            <button class="textile btn" @click="$router.push('/textile')">
               <span>🧵</span>
               <div>Textile</div>
             </button>

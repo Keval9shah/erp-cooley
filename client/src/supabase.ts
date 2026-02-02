@@ -21,9 +21,26 @@ async function syncInspectionJobs(newRows: any[]) {
 }
 
 async function getInspectionJobs() {
-  const { data, error } = await supabase.from("inspection_jobs").select("*");
+  console.log("Fetching inspection jobs from Supabase...");
+  const { data, error } = await supabase
+    .from("inspection_jobs")
+    .select("*")
+    .neq('moStatus', 'Closed');
   if (error) {
     console.error("Error fetching inspection jobs:", error);
+    return [];
+  }
+  return data;
+}
+
+async function getClosedInspectionJobs() {
+  console.log("Fetching closed inspection jobs from Supabase...");
+  const { data, error } = await supabase
+    .from("inspection_jobs")
+    .select("*")
+    .eq('moStatus', 'Closed');
+  if (error) {
+    console.error("Error fetching closed inspection jobs:", error);
     return [];
   }
   return data;
@@ -65,7 +82,8 @@ async function getMachineQueue() {
     .select(`
       machine_name,
       inspection_jobs (*)
-    `);
+    `)
+    .order('created_at', { ascending: true });
 
   if (error) {
     console.error("Error fetching machine queue:", error);
@@ -74,4 +92,4 @@ async function getMachineQueue() {
   return data;
 }
 
-export { syncInspectionJobs, getInspectionJobs, insertMachineQueue, removeMachineQueue, getMachineQueue };
+export { syncInspectionJobs, getInspectionJobs, getClosedInspectionJobs, insertMachineQueue, removeMachineQueue, getMachineQueue };

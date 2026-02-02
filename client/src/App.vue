@@ -1,9 +1,7 @@
-<script setup lang="ts">
-import AgGridTab from './components/AgGrid.vue'
-import './style.css'
-
-</script>
-
 <template>
-    <agGridTab />
+  <router-view />
 </template>
+
+<script setup lang="ts">
+// No script needed here unless you add logic
+</script>
