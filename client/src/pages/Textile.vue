@@ -17,9 +17,9 @@ function closeModal() {
     <div v-if="showModal" class="modal-overlay">
       <div class="modal">
         <h3>Paste CSV or Excel rows</h3>
-        <textarea v-model="rawCsv" placeholder="Paste CSV or Excel rows here"></textarea>
+         <!-- v-model="rawCsv" -->
+        <textarea placeholder="Paste CSV or Excel rows here"></textarea>
         <div class="modal-actions">
-          <button class="btn" @click="applyCsv">Apply</button>
           <button class="btn" @click="closeModal">Cancel</button>
         </div>
       </div>
