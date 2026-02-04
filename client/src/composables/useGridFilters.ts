@@ -1,7 +1,7 @@
 import { ref, computed } from "vue";
 
 export function useGridFilters(gridApi: any, resizeCells: () => void, registerDropZones: () => void) {
-  const currentFilterState = ref<string>("all");
+  const currentFilterState = ref<string>("inspection");
   const currentDateFilterState = ref<string>("all");
 
   function getWeekDay(weekPosition: string, weekNumber: number): string {
@@ -25,10 +25,6 @@ export function useGridFilters(gridApi: any, resizeCells: () => void, registerDr
       assignedMachine: undefined,
       shipToCustomer: { type: "contains", filter: "MILL", filterType: "text" },
     },
-    all: {
-      assignedMachine: undefined,
-      shipToCustomer: undefined,
-    },
   };
 
   const dateFilterModels: Record<string, Partial<any>> = {
@@ -51,9 +47,6 @@ export function useGridFilters(gridApi: any, resizeCells: () => void, registerDr
 
   const jobTypeFilterButtonText = computed(() => {
     switch (currentFilterState.value) {
-      case "all":
-        machinesToShow.value = ["#2", "#5", "#6", "Cooper", "#7", "SL_#1", "SL_#2"];
-        return "All Jobs";
       case "slitter":
         machinesToShow.value = ["SL_#1", "SL_#2"];
         return "Slitter";
@@ -121,8 +114,8 @@ export function useGridFilters(gridApi: any, resizeCells: () => void, registerDr
   }
 
   let currentJobTypeIndex = 0;
-  const noOfToggles = 3;
-  let jobTypeFilterStates: string[] = ["all", "inspection", "slitter", "mill"];
+  const noOfToggles = 2;
+  let jobTypeFilterStates: string[] = ["inspection", "slitter", "mill"];
 
   function cycleJobTypeFilterOptions() {
     currentJobTypeIndex = (currentJobTypeIndex + 1) % noOfToggles;
