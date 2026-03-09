@@ -2,9 +2,10 @@
 import { ref } from "vue";
 
 const showModal = ref(false);
+let modalTitle = "";
 
-
-function openModal() {
+function openModal(modalType: string) {
+  modalTitle = modalType + " Data";
   showModal.value = true;
 }
 function closeModal() {
@@ -13,10 +14,10 @@ function closeModal() {
 </script>
 
 <template>
-  <div>
+  <div class="ag-grid-tab">
     <div v-if="showModal" class="modal-overlay">
       <div class="modal">
-        <h3>Paste CSV or Excel rows</h3>
+        <h3>{{ modalTitle }}</h3>
          <!-- v-model="rawCsv" -->
         <textarea placeholder="Paste CSV or Excel rows here"></textarea>
         <div class="modal-actions">
@@ -30,8 +31,8 @@ function closeModal() {
         <div>Inspect</div>
       </button>
       <div class="toolbar">
-        <button class="btn" @click="openModal">✚ Greige Data</button>
-        <button class="btn" @click="openModal">✚ Tenter Data</button>
+        <button class="btn" @click="openModal('Greige')">✚ Greige Data</button>
+        <button class="btn" @click="openModal('Tenter')">✚ Tenter Data</button>
       </div>
     </div>
     Welcome to the Textile Page

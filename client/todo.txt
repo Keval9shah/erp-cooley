@@ -1,1 +1,4 @@
 move out add data and generalize it.
+
+
+inspection -> slitter -> mill with mo ship date front and center and sorted.

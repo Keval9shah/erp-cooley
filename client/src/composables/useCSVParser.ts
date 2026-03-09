@@ -1,7 +1,8 @@
-import { ref } from "vue";
-import { syncInspectionJobs, getInspectionJobs } from '../supabase';
+import { useInspectionStore } from "../stores/inspectionStore";
+import { syncInspectionJobs } from '../supabase';
 
 export function useCsvParser() {
+  const store = useInspectionStore();
   // prettier-ignore
   const fields = [
     "id", 
@@ -45,12 +46,52 @@ export function useCsvParser() {
     "scheduleCompleteDate"
   ]
 
-  const Data = ref<any[]>([]);
+  // const greigeFields = [
+  //   "item",
+  //   "itemDescription",
+  //   "status",
+  //   "moStatus",
+  //   "workOrder",
+  //   "promiseDate",
+  //   "requiredQty",
+  //   "reportedQty",
+  //   "remainingQty",
+  //   "onHandQty",
+  //   "plannedMachine",
+  //   "plannedShifts",
+  //   "actualMachine",
+  //   "actualShifts",
+  //   "requiredHours",
+  //   "totalRequiredHours",
+  //   "remainingHours",
+  //   "remainingHoursDuplicate"
+  // ];
 
+  // const tenterFields = [
+  //   "item",
+  //   "itemDescription",
+  //   "status",
+  //   "moStatus",
+  //   "workOrder",
+  //   "woQty",
+  //   "reportedQty",
+  //   "openQty",
+  //   "unitOfMeasure",
+  //   "promiseDate",
+  //   "greigeRequired",
+  //   "greigeRemaining",
+  //   "greigeOnHand",
+  //   "greigeItem",
+  //   "productionScreen"
+  // ];
+
+  // const GreigeData = ref<any[]>([]);
+  // const TenterData = ref<any[]>([]);
+
+  const convertToFloat = (val: any) => (val ? parseFloat(val.replace(/,/g, "")) : 0);
+  const convertToInt = (val: any) => (val ? parseInt(val.replace(/,/g, ""), 10) : 0);
+  const convertToDate = (val: any) => (val ? new Date(val) : null);
   function convertFields(data: any[]) {
-    const convertToFloat = (val: any) => (val ? parseFloat(val.replace(/,/g, "")) : 0);
-    const convertToInt = (val: any) => (val ? parseInt(val.replace(/,/g, ""), 10) : 0);
-    const convertToDate = (val: any) => (val ? new Date(val) : null);
     return data.map((row) => {
       // Cleaning rules for specific fields
       const cleanRules: Record<string, ((val: any) => any)[]> = {
@@ -102,7 +143,7 @@ export function useCsvParser() {
 
   async function parseCsv(csv: string) {
     const lines = csv.trim().split("\n");
-    if (lines.length > 0 && lines[0].startsWith("*") && lines[0].includes("FG MO")) {
+    if (lines.length > 0 && lines[0].startsWith("*") && lines[0].includes("MO Status")) {
       lines.shift();
     }
     const parsed = lines.map((line) => {
@@ -114,12 +155,11 @@ export function useCsvParser() {
     });
     const isSuccess = await syncInspectionJobs(convertFields(parsed));
     if (isSuccess) {
-      Data.value = await getInspectionJobs();
+      await store.loadJobs();
     }
   }
 
   return {
-    Data,
-    parseCsv,
+    parseCsv
   };
 }

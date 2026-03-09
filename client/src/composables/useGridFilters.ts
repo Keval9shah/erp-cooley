@@ -1,7 +1,7 @@
 import { ref, computed } from "vue";
 
 export function useGridFilters(gridApi: any, resizeCells: () => void, registerDropZones: () => void) {
-  const currentFilterState = ref<string>("all");
+  const currentJobTypeFilterState = ref<string>("inspection");
   const currentDateFilterState = ref<string>("all");
 
   function getWeekDay(weekPosition: string, weekNumber: number): string {
@@ -50,7 +50,7 @@ export function useGridFilters(gridApi: any, resizeCells: () => void, registerDr
   };
 
   const jobTypeFilterButtonText = computed(() => {
-    switch (currentFilterState.value) {
+    switch (currentJobTypeFilterState.value) {
       case "all":
         machinesToShow.value = ["#2", "#5", "#6", "Cooper", "#7", "SL_#1", "SL_#2"];
         return "All Jobs";
@@ -85,8 +85,8 @@ export function useGridFilters(gridApi: any, resizeCells: () => void, registerDr
   function applyGridFilter(filterType: string) {
     const model = gridApi.value?.getFilterModel() ?? {};
 
-    // const stateUpdates = [jobTypeFilterModels[currentFilterState.value], dateFilterModels[currentDateFilterState.value]];
-    const stateUpdates = filterType === "job" ? [jobTypeFilterModels[currentFilterState.value]] : [dateFilterModels[currentDateFilterState.value]];
+    // const stateUpdates = [jobTypeFilterModels[currentJobTypeFilterState.value], dateFilterModels[currentDateFilterState.value]];
+    const stateUpdates = filterType === "job" ? [jobTypeFilterModels[currentJobTypeFilterState.value]] : [dateFilterModels[currentDateFilterState.value]];
 
     stateUpdates.forEach((update) => {
       Object.entries(update).forEach(([key, value]) => {
@@ -106,27 +106,28 @@ export function useGridFilters(gridApi: any, resizeCells: () => void, registerDr
     resizeCells();
   }
 
-  function scrollFunction(){
-    const machineCards = document.querySelectorAll('.machine-card');
-    machineCards.forEach(machineCard => {
-      const machineName = machineCard.querySelector('.machine-name') as HTMLElement;
-      machineCard.addEventListener('scroll', () => {
-        if (machineCard.scrollTop > machineName.offsetTop) {
-          machineName.classList.add('scrolled');
-        } else {
-          machineName.classList.remove('scrolled');
+  function scrollFunction() {
+    document.querySelectorAll('.machine-name').forEach((title) => {
+      const observer = new IntersectionObserver(
+        ([entry]) => {
+          title.classList.toggle('scrolled', entry.intersectionRatio < 1);
+        },
+        {
+          root: title.closest('.machine-card'),
+          threshold: [1], // fires exactly when element is fully visible vs partially hidden
         }
-      });
+      );
+      observer.observe(title);
     });
   }
 
   let currentJobTypeIndex = 0;
   const noOfToggles = 3;
-  let jobTypeFilterStates: string[] = ["all", "inspection", "slitter", "mill"];
+  let jobTypeFilterStates: string[] = ["inspection", "slitter", "mill", "all"];
 
   function cycleJobTypeFilterOptions() {
     currentJobTypeIndex = (currentJobTypeIndex + 1) % noOfToggles;
-    currentFilterState.value = jobTypeFilterStates[currentJobTypeIndex];
+    currentJobTypeFilterState.value = jobTypeFilterStates[currentJobTypeIndex];
     applyGridFilter("job");
   }
 
@@ -139,7 +140,7 @@ export function useGridFilters(gridApi: any, resizeCells: () => void, registerDr
     applyGridFilter("date");
   }
 
-  const machinesToShow = ref(["#2", "#5", "#6", "Cooper", "#7", "SL_#1", "SL_#2"]);
+  const machinesToShow = ref(["#2", "#5", "#6", "Cooper"]);
 
   return {
     jobTypeFilterButtonText,

@@ -1,14 +1,14 @@
 <script setup lang="ts">
 import { useGridFilters } from "../composables/useGridFilters";
-import { ref, onMounted, reactive, toRaw } from "vue";
+import { ref, onMounted, toRaw } from "vue";
 import { AgGridVue } from "ag-grid-vue3";
 import { useCsvParser } from "../composables/useCSVParser";
 import { Splitpanes, Pane } from "splitpanes";
+import { insertMachineQueue, removeMachineQueue } from "../supabase";
 import "splitpanes/dist/splitpanes.css";
-import { getInspectionJobs, getClosedInspectionJobs, insertMachineQueue, removeMachineQueue, getMachineQueue } from "../supabase";
-
+import { storeToRefs } from "pinia";
+import { useInspectionStore } from "../stores/inspectionStore";
 import OrderCard from "./OrderCard.vue";
-
 import { themeAlpine, ModuleRegistry, AllCommunityModule, colorSchemeDarkBlue } from "ag-grid-community";
 import type { GridApi, GridOptions, ColDef, RowStyle, RowDropZoneParams } from "ag-grid-community";
 // import { useRouter } from 'vue-router'
@@ -16,7 +16,10 @@ ModuleRegistry.registerModules([AllCommunityModule]);
 
 // const router = useRouter()
 
-const { Data, parseCsv } = useCsvParser();
+const store = useInspectionStore();
+const { jobs, storeMachineQueues } = storeToRefs(store);
+
+const { parseCsv } = useCsvParser();
 const rawCsv = ref("");
 const showModal = ref(false);
 const isMobile = ref(window.innerWidth < 768);
@@ -82,40 +85,33 @@ async function applyCsv() {
   resizeCells();
   rawCsv.value = "";
   showModal.value = false;
-  (await getMachineQueue()).forEach((item) => {
-    const queue = machineQueues[item.machine_name];
-    const newJob = item.inspection_jobs;
-    const existingIndex = queue.findIndex((job: any) => job.order_id === (newJob as any).order_id);
+  //for each in storeMachineQueues 
+  Object.keys(storeMachineQueues.value).forEach((machineName) => {
+    storeMachineQueues.value[machineName] = [];
+  });
 
-    if (existingIndex !== -1) {
-      queue[existingIndex] = newJob;
-    } else {
-      queue.push(newJob);
-    }
-    gridApi.value?.applyTransaction({ remove: [{ order_id: (item.inspection_jobs as any).order_id }] });
+  await store.loadQueues();
+  // Remove queued jobs from the grid
+  Object.values(storeMachineQueues.value).forEach((jobs) => {
+    jobs.forEach((job: any) => {
+      gridApi.value?.applyTransaction({ remove: [{ order_id: job.order_id }] });
+    });
   });
 }
-
-const machineQueues = reactive<Record<string, any[]>>({
-  "#2": [],
-  "#5": [],
-  "#6": [],
-  Cooper: [],
-  "#7": [],
-  "SL_#1": [],
-  "SL_#2": [],
-});
 
 const selectedMachine = ref("");
 onMounted(async () => {
   selectedMachine.value = machinesToShow.value[0];
   if (!isMobile.value) {
-    Data.value = await getInspectionJobs();
+    await store.loadJobs();
   }
-  (await getMachineQueue()).forEach((item) => {
-    machineQueues[item.machine_name].push(item.inspection_jobs);
+  await store.loadQueues();
 
-    !isMobile.value && gridApi.value?.applyTransaction({ remove: [{ order_id: (item.inspection_jobs as any).order_id }] });
+  // Remove queued jobs from the grid
+  Object.values(storeMachineQueues.value).forEach((jobs) => {
+    jobs.forEach((job: any) => {
+      gridApi.value?.applyTransaction({ remove: [{ order_id: job.order_id }] });
+    });
   });
   !isMobile.value && scrollFunction();
 });
@@ -160,7 +156,7 @@ function registerDropZones() {
       onDragStop: async (dragParams: any) => {
         const orderData = dragParams.node.data;
         // Add to machine
-        machineQueues[container.id].push(orderData);
+        storeMachineQueues.value[container.id].push(orderData);
         await insertMachineQueue(orderData.order_id, container.id);
 
         // Remove from grid efficiently
@@ -215,6 +211,8 @@ const gridOptions: GridOptions = {
         filter: "closed",
         filterType: "text",
       },
+      assignedMachine: { type: "contains", filter: "INSP", filterType: "text" },
+      shipToCustomer: { type: "notContains", filter: "MILL", filterType: "text" },
     });
     params.api.applyColumnState({
       state: [
@@ -228,25 +226,17 @@ const gridOptions: GridOptions = {
   onFirstDataRendered: resizeCells,
   onFilterChanged: async (params: any) => {
     const filterModel = params.api.getFilterModel();
-    const moStatusFilter = filterModel.moStatus;
-    if (moStatusFilter) {
-      const { type, filter } = moStatusFilter;
-      // If the filter is not excluding 'closed', load closed jobs
-      if (!(type === 'notContains' && filter.toLowerCase().includes('closed'))) {
-        if (!closedLoaded.value) {
-          const closedJobs = await getClosedInspectionJobs();
-          Data.value.push(...closedJobs);
-          closedLoaded.value = true;
-        }
-      }
-    } else {
-      // No filter on moStatus, load closed if not loaded
-      if (!closedLoaded.value) {
-        const closedJobs = await getClosedInspectionJobs();
-        Data.value.push(...closedJobs);
-        closedLoaded.value = true;
-      }
-    }
+  const moStatusFilter = filterModel.moStatus;
+  const isExcludingClosed = moStatusFilter?.type === 'notContains' && 
+                             moStatusFilter?.filter?.toLowerCase().includes('closed');
+
+  if (!isExcludingClosed && !closedLoaded.value) {
+    await store.loadClosedJobs();
+    // merge into grid data
+    params.api.applyTransaction({ add: store.closedJobs });
+    closedLoaded.value = true;
+  }
+
   },
   getRowStyle: (params) => {
     const data = params.data;
@@ -262,7 +252,7 @@ const gridOptions: GridOptions = {
 const getRatio = (data: any) => {
   const req = data.fgReqQty;
   const noOfPanels = getNumberOfPanels(data.fgPanelItems);
-  if ((req === 0) || (data.aGradeCompleted > req)) return 100;
+  if ((req === 0) || (data.aGradeCompleted >= req)) return 100;
   const calculatedValueForRatio = (data.fabToInspectUnassign + data.availableMasterQty) * noOfPanels;
   return (calculatedValueForRatio * 100) / (req - data.aGradeCompleted);
 };
@@ -272,8 +262,8 @@ function formatMachineName(machine: string) {
 }
 
 async function removeOrder(machine: string, orderIndex: number) {
-  if (machineQueues[machine]) {
-    const removedOrder = toRaw(machineQueues[machine].splice(orderIndex, 1)[0]);
+  if (storeMachineQueues.value[machine]) {
+    const removedOrder = toRaw(storeMachineQueues.value[machine].splice(orderIndex, 1)[0]);
     await removeMachineQueue(removedOrder.order_id, machine);
     if (removedOrder) {
       gridApi.value?.applyTransaction({ add: [removedOrder] }); // Add back to grid efficiently
@@ -318,14 +308,14 @@ const myTheme = themeAlpine.withPart(colorSchemeDarkBlue);
             <div v-for="machine in machinesToShow" :key="machine" class="machine-card" :id="machine">
               <div class="machine-name" v-html="formatMachineName(machine)"></div>
               <div class="machine-orders">
-                <OrderCard v-for="(order, index) in machineQueues[machine]" :key="order.fgMo + '-' + index" :order="order" :machine="machine" :formatDateCell="formatDateCell" :getRatio="getRatio" :index="index" @removeOrder="removeOrder" />
+                <OrderCard v-for="(order, index) in storeMachineQueues[machine]" :key="order.fgMo + '-' + index" :order="order" :machine="machine" :formatDateCell="formatDateCell" :getRatio="getRatio" :index="index" @removeOrder="removeOrder" />
               </div>
             </div>
           </div>
         </div>
         <div class="util-group" v-if="isMobile">
           <div class="machines" v-if="selectedMachine">
-            <OrderCard v-for="(order, index) in machineQueues[selectedMachine]" :key="order.fgMo + '-' + index" :order="order" :machine="selectedMachine" :formatDateCell="formatDateCell" :getRatio="getRatio" :index="index" @removeOrder="removeOrder" />
+            <OrderCard v-for="(order, index) in storeMachineQueues[selectedMachine]" :key="order.fgMo + '-' + index" :order="order" :machine="selectedMachine" :formatDateCell="formatDateCell" :getRatio="getRatio" :index="index" @removeOrder="removeOrder" />
           </div>
           <div class="tabs">
             <div v-for="machine in machinesToShow" v-html="formatMachineName(machine)" :key="machine" class="tab" :class="{ active: selectedMachine === machine }" @click="selectedMachine = machine; console.log('Selected machine:', machine)"></div>
@@ -334,7 +324,7 @@ const myTheme = themeAlpine.withPart(colorSchemeDarkBlue);
       </Pane>
       <Pane v-if="!isMobile" max-size="65">
         <div class="ag-theme-alpine">
-          <AgGridVue class="ag-grid" :theme="myTheme" :rowData="Data" :grid-options="gridOptions" />
+          <AgGridVue class="ag-grid" :theme="myTheme" :rowData="jobs" :grid-options="gridOptions" />
         </div>
       </Pane>
     </Splitpanes>

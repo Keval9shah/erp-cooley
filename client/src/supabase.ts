@@ -20,6 +20,16 @@ async function syncInspectionJobs(newRows: any[]) {
   return true;
 }
 
+async function hasChangedSince(table: string, since: number): Promise<boolean> {
+  const { data, error } = await supabase
+    .from(table)
+    .select("created_at")
+    .gt("created_at", new Date(since).toISOString())
+    .limit(1);
+  if (error) return true; // assume changed if check fails
+  return (data?.length ?? 0) > 0;
+}
+
 async function getInspectionJobs() {
   console.log("Fetching inspection jobs from Supabase...");
   const { data, error } = await supabase
@@ -55,7 +65,7 @@ async function getClosedInspectionJobs() {
 // }
 
 async function insertMachineQueue(job_id:any, machine_name: string) {
-  const { error } = await supabase.from("machine_queue").upsert({
+  const { error } = await supabase.from("machine_queues").upsert({
     job_id,
     machine_name,
   });
@@ -66,7 +76,7 @@ async function insertMachineQueue(job_id:any, machine_name: string) {
 }
 
 async function removeMachineQueue(job_id:any, machine_name: string) {
-  const { error } = await supabase.from("machine_queue").delete().match({
+  const { error } = await supabase.from("machine_queues").delete().match({
     job_id,
     machine_name,
   });
@@ -78,7 +88,7 @@ async function removeMachineQueue(job_id:any, machine_name: string) {
 
 async function getMachineQueue() {
   const { data, error } = await supabase
-    .from("machine_queue")
+    .from("machine_queues")
     .select(`
       machine_name,
       inspection_jobs (*)
@@ -92,4 +102,4 @@ async function getMachineQueue() {
   return data;
 }
 
-export { syncInspectionJobs, getInspectionJobs, getClosedInspectionJobs, insertMachineQueue, removeMachineQueue, getMachineQueue };
+export { hasChangedSince, syncInspectionJobs, getInspectionJobs, getClosedInspectionJobs, insertMachineQueue, removeMachineQueue, getMachineQueue };
