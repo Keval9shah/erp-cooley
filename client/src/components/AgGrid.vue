@@ -255,6 +255,7 @@ const getRatio = (data: any) => {
   if ((req === 0) || (data.aGradeCompleted >= req)) return 100;
   const calculatedValueForRatio = (data.fabToInspectUnassign + data.availableMasterQty) * noOfPanels;
   return (calculatedValueForRatio * 100) / (req - data.aGradeCompleted);
+  console.log()
 };
 
 function formatMachineName(machine: string) {
