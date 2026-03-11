@@ -35,10 +35,10 @@ function removeOrderLocal() {
       <div class="order-item">
         <div :class="'item-span' + (getRatio(order) < 90 ? ' low-ratio' : '')">
           <span class="text-progress" :style="{ '--p': Math.min(100, getRatio(order)) + '%' }">
-            {{ order.fabItem.slice(0, 5) }}
+            {{ order.fabItem.split(" ")[0] }}
           </span>
         </div>
-        {{ order.fabItem.slice(5) }}
+        {{ order.fabItem.split(" ").slice(1).join(" ") }}
         {{ order.fabMo === 'USE MASTER' ? '' : '(' + order.fabMo.replace(/^0+/, '') + ')' }}
         {{ ' | ' + order.coreSize }}
       </div>
