@@ -23,8 +23,8 @@ async function syncInspectionJobs(newRows: any[]) {
 async function hasChangedSince(table: string, since: number): Promise<boolean> {
   const { data, error } = await supabase
     .from(table)
-    .select("created_at")
-    .gt("created_at", new Date(since).toISOString())
+    .select("updated_at")
+    .gt("updated_at", new Date(since).toISOString())
     .limit(1);
   if (error) return true; // assume changed if check fails
   return (data?.length ?? 0) > 0;
